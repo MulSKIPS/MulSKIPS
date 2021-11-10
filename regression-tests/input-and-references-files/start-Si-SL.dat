@@ -1,0 +1,19 @@
+1 0    ! number of elements of the growing crystal, number of coverage species
+14  ! list of elements of the crystal
+FS ! Initstat: S Sphere, C Parellelepipid, F Flat (100) surface, A APB, I inverted pyramid, D inverted pyramid of C, Z inverted pyramid of Si, J inverted pyramid with APB, Fw Flat SiC(100) surface with walls, Fa Flat SiC(100) surface with aperture
+360 400 120 ! Len1 Len2 Len3
+1.0 ! PtransZig
+0.452500000000000 ! KMC_sf -> KMC Super-Lattice parameter in Ang
+Iter ! ExitStrategy. Iter or Time. Decides whether to use iterations or time to check simulation end and output frequency
+10000000 ! IterMax -> Max number of iterations
+10000000  ! OutMolMol -> output frequency
+T   ! R = production run; T = run test with a fixed sequence of random numbers
+9117116 ! Random seed
+F ! Save final state
+F ! Save final Coor
+1 1 1.4037680927273852 ! PtransE_Si[0,1]
+1 2 0.0019705648581594803 ! PtransE_Si[1,1]
+1 3 2.7662160725341417e-06 ! PtransE_Si[2,1]
+1 1 0.0009258079026426269 ! PtransD[1]
+1 2 0.0009258079026426269 ! PtransD[3]
+1 3 0.0009258079026426269 ! PtransD[5]

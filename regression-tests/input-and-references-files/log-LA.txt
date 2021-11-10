@@ -1,0 +1,41 @@
+ KMC box size:          480         240         240
+            ***** Simulating PVD or LA *****
+ Crystal species (NCrystal=           1 ) --> Z:          14
+ ****** MulSKIPs run for laser annealing ******
+ Melting temperature in Kelvin:    1688.0000000000000     
+ Top air thickness (ang):    10.000000000000000     
+ Nucleus thickness (ang):    70.000000000000000     
+ Model homogeneous nucleation: F 
+ KMC Super-Lattice parameter (ang):   0.45250000000000001     
+ Exit strategy: Iter
+ MaxIter:               1000000
+ OutMolMol:               1000000
+ ATTENTION! You are running mulskips in test modality,  that is random numbers are not so random!!
+ IDUM     9117116
+ ATTENTION! Storing checkpoint file LattChk.dat                                                                                                                                                                                             
+ This will occupy a lot of disk space...
+ ATTENTION! Storing final Coor file LattStat.dat                                                                                                                                                                                            
+ This might occupy a a lot of disk space...
+ maxElines           3
+ numParticelle=      500000 Levels =          20 , SizeTree =     1048575
+ Reading input temperature file: /home/tano/CNR-IMM/mulskips-dev/regression-tests-CVD/input-and-references-files/TempStat.480x240x240.dat                                                                                                
+ Done reading input temperatures file
+ Reading input geometry file: /home/tano/CNR-IMM/mulskips-dev/regression-tests-CVD/input-and-references-files/LattGeo.480x240x240.dat                                                                                                 
+ Done reading input geometry file
+ Max temperature is:            0 K
+ Atoms,Voids,AdAtoms       63828           0        2856
+ I00000000
+ NumAtWrong:          420
+           0
+ I00000001
+ NumAtWrong:          359
+           0
+ Iter, Time, Site              1000000   1.0775668160890186E-009         213         111          93
+ NatNvoidNad       70915           1        2277
+ I00000001
+ NumAtWrong:          359
+           0
+ Writing checkpoint file for a restart runLattChk.dat                                                                                                                                                                                             
+ Done writing checkpoint file for a restart runLattChk.dat                                                                                                                                                                                             
+ Writing Coor (LA phases) file LattStat.dat                                                                                                                                                                                            
+ Done writing Coor (LA phases) file LattStat.dat                                                                                                                                                                                            

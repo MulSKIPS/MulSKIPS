@@ -1,0 +1,25 @@
+ KMC box size:          480         480         480
+            ***** Simulating PVD or LA *****
+ Crystal species (NCrystal=           2 ) --> Z:          14           6
+ KMC Super-Lattice parameter (ang):   0.38583333333333331     
+ Exit strategy: Iter
+ MaxIter:              10000000
+ OutMolMol:              10000000
+ ATTENTION! You are running mulskips in test modality,  that is random numbers are not so random!!
+ IDUM     9117116
+ SaveFinalState flag is not "T": checkpoint file will  not be written.
+ SaveCoo flag is not "T": Coor file not stored
+ maxElines          18
+ numParticelle=      500000 Levels =          20 , SizeTree =     1048575
+ Atoms,Voids,AdAtoms        3457           0        1616
+ I00000000
+ NumAtWrong:            0
+           0
+ I00000001
+ NumAtWrong:         1049
+           0
+ Iter, Time, Site             10000000   3886577.0311914771              321         189         231
+ NatNvoidNad       21107           2        7000
+ I00000001
+ NumAtWrong:         1050
+           0

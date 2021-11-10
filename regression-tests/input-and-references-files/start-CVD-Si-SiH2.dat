@@ -1,0 +1,32 @@
+1 1 ! NCrystal, NCov 
+14 ! Atomic numbers of crystal species 
+1 ! Atomic numbers of coverage species 
+FS ! Initstat: S Sphere, C Parellelepipid, F Flat SiC-3C(100) surface, FS Flat Si(100) surface, A APB, I inverted pyramid, D inverted pyramid of C, Z inverted pyramid of Si, J inverted pyramid with APB, Fw Flat SiC(100) surface with walls, Fa Flat SiC(100) surface with aperture, SL Si(100) liquid-solid interface, FF FinFET Si (100) liquid-solid, SS Sphere Si liquid-solid
+48 120 120 ! Len1 [Len2 Len3 Len4]
+1.0 ! PtransZig
+0.452500000000000 ! KMC_sf -> KMC Super-Lattice parameter in Ang
+Time ! ExitStrategy. Iter or Time. Decides whether to use iterations or time to check simulation end and output frequency
+105.144755160701223 ! TotTime -> Max time of simulation in seconds
+105.14475516070123 ! OutTime -> Delta Time between consecutive print, in seconds
+T ! RunType. R = truly random . T = not so random (use this for regression tests). C = continuation run
+9117116 ! Random seed
+F ! Save final state
+F ! Save final Coor
+1 10 2226.5697760341627 ! PtransE[1,[1 0]] 
+1 11 981.1791875933076 ! PtransE[1,[1 1]] 
+1 12 432.3747715110884 ! PtransE[1,[1 2]] 
+1 13 190.53394670735102 ! PtransE[1,[1 3]] 
+1 20 34.804675968079124 ! PtransE[1,[2 0]] 
+1 21 15.337324730794487 ! PtransE[1,[2 1]] 
+1 22 6.7586760501256276 ! PtransE[1,[2 2]] 
+1 30 0.010861139302185713 ! PtransE[1,[3 0]] 
+1 31 0.004786162082841824 ! PtransE[1,[3 1]] 
+1 1 85.49860227606791 ! PtransD[1,1] 
+1 2 85.49860227606791 ! PtransD[1,2] 
+1 3 85.49860227606791 ! PtransD[1,3] 
+2 1 287.0271459302869 ! PtransAbs[2,1] 
+2 2 287.0271459302869 ! PtransAbs[2,2] 
+2 3 287.0271459302869 ! PtransAbs[2,3] 
+2 1 40.27023414006161 ! PtransDes[2,1] 
+2 2 40.27023414006161 ! PtransDes[2,2] 
+2 3 40.27023414006161 ! PtransDes[2,3] 

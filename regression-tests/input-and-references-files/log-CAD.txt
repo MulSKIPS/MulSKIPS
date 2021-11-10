@@ -1,0 +1,28 @@
+ KMC box size:          480         240         240
+            ***** Simulating CVD *****
+ Crystal species (NCrystal=           1 ) --> Z:          14
+ Coverage species (NCov=           1 ) --> Z:           1
+ KMC Super-Lattice parameter (ang):   0.45250000000000001     
+ Exit strategy: Iter
+ MaxIter:               3000000
+ OutMolMol:               3000000
+ ATTENTION! You are running mulskips in test modality,  that is random numbers are not so random!!
+ IDUM     9117116
+ SaveFinalState flag is not "T": checkpoint file will  not be written.
+ SaveCoo flag is not "T": Coor file not stored
+ maxElines           9
+ numParticelle=      500000 Levels =          20 , SizeTree =     1048575
+ Reading input geometry file: /home/tano/CNR-IMM/mulskips-dev/regression-tests-CVD/input-and-references-files/LattGeo.480x240x240.withzeros.dat                                                                                       
+ Done reading input geometry file
+ Atoms,Voids,AdAtoms       78400           0        3198
+ I00000000
+ NumAtWrong:            0
+           0
+ I00000001
+ NumAtWrong:          755
+           0
+ Iter, Time, Site              3000000   13.869671395434793              159          99         183
+ NatNvoidNad       91693          22        4367
+ I00000001
+ NumAtWrong:          755
+           0
