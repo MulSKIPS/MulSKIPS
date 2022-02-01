@@ -323,11 +323,10 @@ C       sf = 4.63/12.0  ! valid only for SiC
             LattCoo(x,y,z)=IBCLR(LattCoo(x,y,z),PosC)
             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
         ELSE
-            LattCoo(x,y,z)=IBCLR(LattCoo(x,y,z),PosC)
-            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
+            LattCoo(x,y,z)=IBCLR(LattCoo(x,y,z),PosSi)
+            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
         END IF
       END DO 
-      
       CLOSE(FN)
       CLOSE(FN+3)
       CLOSE(FN+4)

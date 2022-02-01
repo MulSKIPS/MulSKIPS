@@ -15,7 +15,7 @@ what: $(DESTDIR)/mulskips.e
 SOURCE = $(MODDIR)/defdertype.f $(MODDIR)/defsystem.f $(MODDIR)/definitions.f \
 $(INITDIR)/SetAPB.f  $(INITDIR)/SetInvPC.f    $(INITDIR)/SetInvPwAPB.f $(INITDIR)/SetNCSp.f $(INITDIR)/SetNCSpSi.f \
 $(INITDIR)/SetAPBSym.f $(INITDIR)/SetInvP.f  $(INITDIR)/SetInvPwOnlyCorSi.f  $(INITDIR)/SetSiC3C.f \
-$(INITDIR)/SetSiCSF.f \
+$(INITDIR)/SetSiCSF.f $(INITDIR)/SetSiGex.f \
 $(INITDIR)/SetSiC3Cww.f $(INITDIR)/SetSiC3Cwwaperture.f $(INITDIR)/SetSi.f $(INITDIR)/SetSiFINFET.f \
 $(INITDIR)/SetCAD.f $(INITDIR)/SetT.f \
 $(INITDIR)/SetAPBSymZimb1.f  $(INITDIR)/SetInvPOff.f  $(INITDIR)/SetInvPwOnlySiorC.f \

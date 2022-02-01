@@ -51,6 +51,7 @@
       LOGICAL   MolmOutpStat
       REAL(8) Random
       EXTERNAL Random
+      REAL(8) alloyfraction
 ! Executable statments
 8     FORMAT(I4,I5,' ',8ES10.3)
 9     FORMAT(I4,' ',8ES10.3)
@@ -122,10 +123,15 @@
         write(*,*)'Nucleus thickness (ang): ', LenNuc ! = radius when nucleation is Inhomogeneous
         READ(IPF,*)Homogeneous
         write(*,*)'Model homogeneous nucleation: ', Homogeneous        
-      ELSE  
+      ELSE
         READ(IPF,*)Len1,Len2,Len3
       END IF
       
+      ! If SiGe read alloy fraction
+      IF(InitSt.EQ.'SG')THEN ! SiGex
+        READ(IPF,*)alloyfraction
+      END IF
+
       ! Probability for defect formation
       READ(IPF,*)PtransZig
 
@@ -213,6 +219,9 @@
       ELSE IF(InitSt.EQ.'FS')THEN
          Len1=Len1-MOD(Len1,24)
          CALL SetSi(Len1) ! Len1: init Slab height. 
+      ELSE IF(InitSt.EQ.'SG')THEN
+         Len1=Len1-MOD(Len1,24)
+         CALL SetSiGex(Len1, alloyfraction) ! Len1: init Slab height. 
       ELSE IF(InitSt.EQ.'A')THEN
          CALL SetAFBSymZimb1(Len1)
       ELSE IF(InitSt.EQ.'I')THEN
@@ -297,9 +306,9 @@
 
        SELECT CASE (Itrans)
          CASE (:2) ! deposition crystal species (e.g. 1=Si, 2=C); will need to shift all Itrans for other events by 1 if we want to include a third crystal species
-C            IF(MOD(Iter,OutMolMol).EQ.0)THEN
-C              write(*,*)'Iter',Iter,' Deposition',Ind,Patom,Itrans
-C            END IF
+C           IF(MOD(Iter,OutMolMol).EQ.0)THEN
+C             write(*,*)'Iter',Iter,' Deposition',Ind,Patom,Itrans
+C           END IF
            CALL Deposition(Ind,Itrans)
          CASE (3) ! evaporation of crystal species
 C            IF(MOD(Iter,OutMolMol).EQ.0)THEN
