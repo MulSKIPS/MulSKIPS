@@ -454,7 +454,6 @@ def get_coverage(filename, mp=None):
             nvac += 1
         else:  # this is all undercoordinated crystal atoms (including those surrounding vacancies)
             nundercoo += 1
-    #coverage = {'H': coverage_H, 'Cl': coverage_Cl}  # we'll insert it later on...
 
     # We do not consider as "surface" the 4 crystal atoms surrounding each vacancy (O atoms in xyz) 
     surface_atoms = nundercoo - nvac*4   
@@ -469,7 +468,7 @@ def get_coverage(filename, mp=None):
     surface_dang_bonds = surface_atoms * at2dang
     
     # Get coverage (it should be between 0 and 1)
-    coverage = coverage_H / surface_dang_bonds
+    coverage = {'H': [coverage_H / surface_dang_bonds], 'Cl': [coverage_Cl / surface_dang_bonds]}
 
     # Instead this is how it would be if normalized to the number of surface dangling bonds in a FLAT surface
     # area_box_KMC = xl*yl*1e-20   # m2
@@ -504,11 +503,15 @@ def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minfr
         # All the above operation to get z surfave for a given KMC xyz file are 
         # coded in the get_surface_height function.
         # Here we calculate and store the surface height for all output files.
-        all_surface_coverage = []
-        for file in files:
+        # all_surface_coverage = {}
+        for i, file in enumerate(files):
             print(file)
             surface_coverage = get_coverage(file, mp)
-            all_surface_coverage.append(surface_coverage)
+            if i==0: 
+                all_surface_coverage = surface_coverage.copy() # will be zeros because first file is I00000000.xyz
+            else:
+                for key in surface_coverage:
+                    all_surface_coverage[key].extend(surface_coverage[key])
         #print(all_surface_coverage)
 
         """
@@ -543,21 +546,26 @@ def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minfr
         2) il numero di dangling bonds dei silici in superficie, assumendo flat surface, è N_Si100 = area_box_KMC * 6.78e14 at/cm2
         3) coverage = N_h / N_Si100
         """
-        coverage_ave = np.mean(np.asarray(all_surface_coverage[Nexclude:-Nexclude]))
-        print('\nAverage H coverage for Process ID {}: {} \n'.format(rundirname, coverage_ave))
+        coverage_ave = {}
+        for key in all_surface_coverage:
+            coverage_ave[key] = np.mean(np.asarray(all_surface_coverage[key][Nexclude:-Nexclude]))
+            print('\nAverage {} coverage for Process ID {}: {} \n'.format(key, rundirname, coverage_ave[key]))
 
         # Plot stuff
         if plotting:
+            colors = {'Cl':'b', 'H':'g'}
             # Here we plot the surface height as a zsurfave  as function of the KMC steps and the process time
             plt.figure(figsize=(10,4))
             plt.rcParams.update({'font.size': 14})
             plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0))
-            plt.plot(time_list, all_surface_coverage, 'k-')
-            plt.axhline(coverage_ave, c='grey', ls=':')
-            plt.ylabel('Coverage of H')
+            for key in all_surface_coverage:
+                plt.plot(time_list, all_surface_coverage[key], '-o', color=colors[key], label=key, alpha=0.5)
+                plt.axhline(coverage_ave[key], color=colors[key], ls=':')
+            plt.ylabel('Coverage')
             plt.xlabel('time [s]')
             
             # plt.title('Process ID: {}'.format(rundirname[:5]))        
+            plt.legend(loc=0)
             plt.tight_layout()
             if savepng:
                 #rundir = os.getcwd() +'/'+rundirname+'/'

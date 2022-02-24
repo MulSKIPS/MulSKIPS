@@ -240,24 +240,33 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
             file.write(path+'/'+coofilename + "\n") # do not put comments here, only the path
 
         # Probabilities
+        mulskipsProbThreshold = 5e-12
         count=0
         for indsp in range(NCrystal):
             for ind in mp.indices():
                 stringa = ''.join([str(s) for s in ind])
                 indd = tuple(np.insert(ind, 0, indsp))
-                file.write("{} {} {} ! PtransE[{},{}] \n".format(indsp+1, stringa, PtransE[indd], indsp+1, ind))
+                if PtransE[indd] < mulskipsProbThreshold: print(f'\nWARNING: PtransE[{indd}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                prob = np.amax([mulskipsProbThreshold, PtransE[indd]]) # ensures all probs are above minimum threshold in fortran
+                file.write("{} {} {} ! PtransE[{},{}] \n".format(indsp+1, stringa, prob, indsp+1, ind))
                 count+=1
         print('Number of evaporation probabilities: ', count)
         for indsp in range(NCrystal):
             for ii in range(3):
-                file.write("{} {} {} ! PtransD[{},{}] \n".format(indsp+1, ii+1, PtransD[indsp,ii], indsp+1,ii+1))
+                if PtransD[indsp,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransD[{indsp},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                prob = np.amax([mulskipsProbThreshold, PtransD[indsp,ii]]) # ensures all probs are above minimum threshold in fortran
+                file.write("{} {} {} ! PtransD[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
         if NCov!=0:
             for indsp in range(NCrystal,NCrystal+NCov):
                 for ii in range(3):
-                    file.write("{} {} {} ! PtransAbs[{},{}] \n".format(indsp+1, ii+1, PtransAbs[indsp-NCrystal,ii], indsp+1,ii+1))
+                    if PtransAbs[indsp-NCrystal,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransAbs[{indsp-NCrystal},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                    prob = np.amax([mulskipsProbThreshold, PtransAbs[indsp-NCrystal,ii]]) # ensures all probs are above minimum threshold in fortran
+                    file.write("{} {} {} ! PtransAbs[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
             for indsp in range(NCrystal,NCrystal+NCov):
                 for ii in range(3):
-                    file.write("{} {} {} ! PtransDes[{},{}] \n".format(indsp+1, ii+1, PtransDes[indsp-NCrystal,ii], indsp+1,ii+1))
+                    if PtransDes[indsp-NCrystal,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransDes[{indsp-NCrystal},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                    prob = np.amax([mulskipsProbThreshold, PtransDes[indsp-NCrystal,ii]]) # ensures all probs are above minimum threshold in fortran
+                    file.write("{} {} {} ! PtransDes[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
         file.close() 
         print("DONE writing start.dat")
         return

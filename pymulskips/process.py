@@ -1,7 +1,9 @@
 import time
 import math
 import numpy as np
-import os,shutil,subprocess,sys
+import os,shutil,subprocess,sys, copy
+import cantera as ct
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # CLASS FOR PVD PROCESSES
@@ -12,7 +14,7 @@ class PVD():
     def __init__(self, 
         substrate='SiC-3C', precursors=['Si', 'Si2C', 'SiC2'], 
         calibration_type='avrov', Tsource=1500, Tseed_center=1560,
-        calibration_params=None):
+        calibration_params=None, miller=100):
         
         self.substrate=substrate
         self.precursors=precursors
@@ -31,47 +33,59 @@ class PVD():
         self.Tsource = Tsource # K
         self.Tseed_center = Tseed_center # K
 
-        # Some constants related to the gas phase
-        self.Rgas = 8.314462618       # Gas constant J/mol/K
-        self.NA = 6.02214076e23       # Avogadro Number [mol^-1]
-        self.kb_ev = 8.617333262145e-5     # [eV/K]
+        self.miller = miller
 
         # By default here there is no coverage
         self.listcov = []
         self.listcovZ = []
 
+        # Some constants related to the gas phase
+        self.Rgas = ct.gas_constant * 1e-3       # Gas constant J/mol/K
+        self.NA = ct.avogadro * 1e-3       # Avogadro Number [mol^-1]
+        self.kb_ev = ct.boltzmann / ct.electron_charge     # [eV/K]
+        self.h = ct.planck / ct.electron_charge # eV*s
 
         # Molar masses of elements (Si, C, H, Cl, B, P, Ge...)
-        self.M_Si = 0.0280855  #Kg/mol
-        self.M_H = 0.00100784 #Kg/mol
-        self.M_C = 0.0120107 #Kg/mol
-        self.M_Cl = 0.035453 #Kg/mol
-        self.M_Ge = 0.07264 #Kg/mol
-        self.M_B = 0.010811 #Kg/mol
-        self.M_P = 0.030973762 #Kg/mol
+        self.M_Si = ct.Element('Si').weight*1e-3  #Kg/mol
+        self.M_H = ct.Element('H').weight*1e-3  #Kg/mol
+        self.M_C = ct.Element('C').weight*1e-3 #Kg/mol
+        self.M_Cl = ct.Element('Cl').weight*1e-3 #Kg/mol
+        self.M_Ge = ct.Element('Ge').weight*1e-3 #Kg/mol
+        self.M_B = ct.Element('B').weight*1e-3 #Kg/mol
+        self.M_P = ct.Element('P').weight*1e-3 #Kg/mol
+
 
         # Some constants related to the solid growing substrate
         if self.substrate == 'SiC-3C': 
+            self.listcry = ['Si', 'C']
             self.mass = self.M_Si + self.M_C # [kg/mol]
             self.rho = 3210 # kg/m^3    
-            self.a0 = pow(4 * self.mass / self.NA / self.rho,1.0 / 3.0)  # [m]  #side of the cubic cell of 3C-SiC containing four Si-C dimers
+            self.a0 = pow(4*self.mass/self.NA/self.rho,1.0/3.0) # [m] side of the cubic conventional cell of 3C-SiC containing four Si-C dimers
             self.KMC_sf = 4.63/12.0   # KMC Super-Lattice parameter (angstrom)
-            self.listcry = ['Si', 'C']
-            self.listcryZ = [14, 6]
-            self.listcrymass = {'Si':self.M_Si, 'C':self.M_C}
-
-        elif self.substrate == 'Si':                                                        
+        elif self.substrate == 'Si': 
+            self.listcry = ['Si']
             self.mass = self.M_Si # [kg/mol]
             self.rho = 2329  # [kg/m^3]
             self.a0 = pow(8 * self.mass / self.NA / self.rho,1.0 / 3.0)  # [m]  #lattice constant of Si (diamond structure, containing eight atoms per cell)
             self.KMC_sf = 5.43/12.0   # KMC Super-Lattice parameter (angstrom)
-            self.listcry = ['Si']
-            self.listcryZ = [14]                                                      
-            self.listcrymass = {'Si': self.M_Si}    
+            self.Tm = 1688 # K # Melting
+            self.Td = 640 # K # Debye #corrected by 0.6 to estimate SURFACE Td
+            if self.miller == 100:
+                self.at_density = 6.78e18 # atoms/m^2
+            elif self.miller == 110:
+                self.at_density = 9.59e18 # atoms/m^2
+            elif self.miller == 111:
+                self.at_density = 7.83e18 # atoms/m^2
+            else:
+                print('ERROR: Surface with Miller indices {} is not implemented'.format(self.miller))
         else:
             print('ERROR: Substrate {} is not implemented'.format(self.substrate))
             sys.exit()
+        # Atomic numbers
+        self.listcryZ = [ct.Element(el).atomic_number for el in self.listcry]
+        # Below is an approiximated rho_surf. For Miller indices differientiation, we should include them for each face in the lines above 
         self.rho_surf = self.rho * self.a0 # Kg/m^2
+
 
         # Info for the specific Process
         if self.substrate == 'SiC-3C':
@@ -359,52 +373,47 @@ class PVD():
 
 class CVD():
 
-    def __init__(self, expdata, calibration_params=None, miller=100):  
+    def __init__(self, expdata, calibration_params=None, miller=100, gas=None):
         
         print('Reading input from provided dictionary')
         self.expdata = expdata
-
         self.substrate = expdata['substrate'] 
         self.precursors = expdata['precursors'] 
-
         self.temp = expdata['temperature']
-        self.pressure = {}
-        for mol in self.precursors:
-            self.pressure[mol] = expdata['pressure_{}'.format(mol)]
+        self.partial_pressures = expdata['partial_pressures']
 
         self.miller = miller
 
+        self.gas = gas
+
         # Some constants related to the gas phase
-        self.Rgas = 8.314462618       # Gas constant J/mol/K
-        self.NA = 6.02214076e23       # Avogadro Number [mol^-1]
-        self.kb_ev = 8.617333262145e-5     # [eV/K]
-        self.h = 4.135667696e-15 # eV*s
+        self.Rgas = ct.gas_constant * 1e-3       # Gas constant J/mol/K
+        self.NA = ct.avogadro * 1e-3       # Avogadro Number [mol^-1]
+        self.kb_ev = ct.boltzmann / ct.electron_charge     # [eV/K]
+        self.h = ct.planck / ct.electron_charge # eV*s
 
         # Molar masses of elements (Si, C, H, Cl, B, P, Ge...)
-        self.M_Si = 0.0280855  #Kg/mol
-        self.M_H = 0.00100784 #Kg/mol
-        self.M_C = 0.0120107 #Kg/mol
-        self.M_Cl = 0.035453 #Kg/mol
-        self.M_Ge = 0.07264 #Kg/mol
-        self.M_B = 0.010811 #Kg/mol
-        self.M_P = 0.030973762 #Kg/mol
+        self.M_Si = ct.Element('Si').weight*1e-3  #Kg/mol
+        self.M_H = ct.Element('H').weight*1e-3  #Kg/mol
+        self.M_C = ct.Element('C').weight*1e-3 #Kg/mol
+        self.M_Cl = ct.Element('Cl').weight*1e-3 #Kg/mol
+        self.M_Ge = ct.Element('Ge').weight*1e-3 #Kg/mol
+        self.M_B = ct.Element('B').weight*1e-3 #Kg/mol
+        self.M_P = ct.Element('P').weight*1e-3 #Kg/mol
 
         # Some constants related to the solid growing substrate
         if self.substrate == 'SiC-3C': 
+            self.listcry = ['Si', 'C']
             self.mass = self.M_Si + self.M_C # [kg/mol]
             self.rho = 3210 # kg/m^3    
-            self.listcry = ['Si', 'C']
-            self.listcryZ = [14, 6]
             self.a0 = pow(4*self.mass/self.NA/self.rho,1.0/3.0) # [m] side of the cubic conventional cell of 3C-SiC containing four Si-C dimers
             self.KMC_sf = 4.63/12.0   # KMC Super-Lattice parameter (angstrom)
         elif self.substrate == 'Si': 
+            self.listcry = ['Si']
             self.mass = self.M_Si # [kg/mol]
             self.rho = 2329  # [kg/m^3]
             self.a0 = pow(8 * self.mass / self.NA / self.rho,1.0 / 3.0)  # [m]  #lattice constant of Si (diamond structure, containing eight atoms per cell)
             self.KMC_sf = 5.43/12.0   # KMC Super-Lattice parameter (angstrom)
-            self.listcry = ['Si']
-            self.listcryZ = [14]
-            self.listcrymass = {'Si':self.M_Si}
             self.Tm = 1688 # K # Melting
             self.Td = 640 # K # Debye #corrected by 0.6 to estimate SURFACE Td
             if self.miller == 100:
@@ -415,54 +424,77 @@ class CVD():
                 self.at_density = 7.83e18 # atoms/m^2
             else:
                 print('ERROR: Surface with Miller indices {} is not implemented'.format(self.miller))
-
         else:
             print('ERROR: Substrate {} is not implemented'.format(self.substrate))
             sys.exit()
+        # Atomic numbers
+        self.listcryZ = [ct.Element(el).atomic_number for el in self.listcry]
         # Below is an approiximated rho_surf. For Miller indices differientiation, we should include them for each face in the lines above 
         self.rho_surf = self.rho * self.a0 # Kg/m^2
 
-        # Info for the specific Process    
-        if self.substrate == 'Si':
-            if self.precursors == ['SiH4', 'H2']:
-                # Some constants related to the gas-phase molecules
-                M_SiH4 = self.M_Si + 4*self.M_H # [kg/mol]
-                M_H2 = 2*self.M_H # [kg/mol]
-                self.precursor_masses = {'SiH4': M_SiH4, 'H2': M_H2}
-                self.listcov = ['H']
-                self.listcovZ = [1]
 
-                # Check
-                if calibration_params is None:
-                    print('ERROR: Please provide calibration parameters dictionary...')
-                    sys.exit()
-                calibration_params_keys = ['Ed1', 'Ed2', 'Ed3', 'Ee1', 'Ee2', 'Ee3', 'Eabs1', 'Eabs2', 'Eabs3', 
-                    'Edes1', 'Edes2', 'Edes3', 'deltaH', 'Ereact_SiH4', 'Ereact_H2', 
-                    'k_Si_SiH4', 'k_H_SiH4', 'k_H_H2', 'scalef', 
-                    'aads', 'bads', 's0', 'Ades', 'Aev', 'Bev', 'Adep']
-                for key, value in calibration_params.items():
-                    if key not in calibration_params_keys:
-                        print('  ERROR: please provide calibration parameter {} '.format(key))
-                        sys.exit()
+        # Define process substrate + precursors    
+        if self.gas:
+            print('Using cantera equilibrium major species as precursors:\n', self.precursors)
+            self.precursor_masses = {}
+            tmp = []
+            for mol in self.precursors: 
+                tmp.extend(list(gas.species(mol).composition.keys()))
+                self.precursor_masses[mol] = gas.molecular_weights[gas.species_index(mol)]*1e-3 # kg/mol
+            self.listcov = list(set(tmp)-set(self.listcry))
+            self.listcovZ = [ct.Element(el).atomic_number for el in self.listcov]
 
-            else:
-                print('ERROR: CVD process for substrate {} with precursors {} is not implemented'.format(self.substrate, self.precursors))
-                sys.exit()
+            calibration_params_keys = ['Edep', 'Eev', 'Eabs', 'Edes', 
+                'deltaE', 'kevap_A', 'kevap_E', 'scalef', 'scalefcov']
+
+
         else:
-            print('ERROR: CVD process for substrate {} is not implemented'.format(self.substrate))
+            if self.substrate == 'Si':
+                if self.precursors == ['SiH4', 'H2']:
+                    # Some constants related to the gas-phase molecules
+                    M_SiH4 = self.M_Si + 4*self.M_H # [kg/mol]
+                    M_H2 = 2*self.M_H # [kg/mol]
+                    self.precursor_masses = {'SiH4': M_SiH4, 'H2': M_H2}
+                    self.listcov = ['H']
+                    self.listcovZ = [1]
+
+                    calibration_params_keys = ['Edep', 'Eev', 'Eabs', 'Edes', 'deltaH', 'deltaCl', 
+                        'Ereact_SiH4', 'Ereact_H2', 'k_Si_SiH4', 'k_H_SiH4', 'k_H_H2', 'scalef', 
+                        'aads', 'bads', 's0', 'Ades', 'Aev', 'Bev', 'Adep']
+
+                else:
+                    print('ERROR: CVD process for substrate {} with precursors {} is not implemented'.format(self.substrate, self.precursors))
+                    sys.exit()
+            else:
+                print('ERROR: CVD process for substrate {} is not implemented'.format(self.substrate))
+                sys.exit()
+
+        # Check calibration params
+        if calibration_params is None:
+            print('ERROR: Please provide calibration parameters dictionary...')
             sys.exit()
 
+        for key in calibration_params_keys:
+            if key not in list(calibration_params.keys()):
+                print('  ERROR: please provide calibration parameter {} '.format(key))
+                sys.exit()
+
+        # for key, value in calibration_params.items():
+        #     if key not in calibration_params_keys:
+        #         print('  ERROR: please provide calibration parameter {} '.format(key))
+        #         sys.exit()
         # Assign calibration params
-        self.calibration_params = calibration_params
-                
+        self.calibration_params = copy.deepcopy(calibration_params)
+
+
         print('*** Initializing CVD process for {} substrate with precursors {}'.format(self.substrate, self.precursors))
         print('mass \t\t\t--> Substrate Mass [Kg/mol]:', self.mass)
         print('rho \t\t\t--> Substrate Density [Kg/m^3]:', self.rho)
         print('rho_surf \t\t--> Substrate Surface density [Kg/m^2]:', self.rho_surf)
         print('at_density \t\t--> Substrate Surface atomic density [at/m^2]:', self.at_density)
         print('temp \t\t\t--> Substrate temperature [K]:', self.temp)
-        print('precursor_masses \t--> Precursor Masses [kg/mol]:', self.precursor_masses)
-        print('pressure \t\t--> Precursors pressure [Pa]:', self.pressure)
+        print('precursor_masses \t--> Precursor Masses [kg/mol]:\n', self.precursor_masses)
+        print('partial_pressures \t\t--> Precursors partial pressures [Pa]:\n', self.partial_pressures)
         print('listcry \t\t--> Crystalline species in the substrate:', self.listcry)
         print('listcryZ \t\t--> Atomic number of Crystalline species in the substrate:', self.listcryZ)
         print('listcov \t\t--> Coverage species:', self.listcov)
@@ -495,9 +527,9 @@ class CVD():
         #     p_dep = self.get_vapor_pressure(mol)  # [Pascal]
         #     coeff = pow(2.*math.pi*self.mass*self.Rgas*self.temp,-0.5) 
         # else:
-        #     p_dep = self.pressure[mol]   # Pascal
+        #     p_dep = self.partial_pressures[mol]   # Pascal
         #     coeff = pow(2.*math.pi*self.precursor_masses[mol]*self.Rgas*self.temp,-0.5)
-        p_dep = self.pressure[mol]   # Pascal
+        p_dep = self.partial_pressures[mol]   # Pascal
         coeff = pow(2.*math.pi*self.precursor_masses[mol]*self.Rgas*self.temp,-0.5)
         flux = p_dep * coeff # mol/s/m^2 
         return flux
@@ -512,24 +544,9 @@ class CVD():
 
     # -------------- SETUP DEPOSITION FREQUENCIES
 
-    def get_energetics_depo(self):
-        ncry = len(self.listcry)
-        Etot=np.zeros((ncry,3))  # energetics of deposition in eV
-        
-        E0=np.zeros((ncry,3)) 
-        if self.substrate == 'Si':
-            E0[0,0]= self.calibration_params['Ed1'] # coor 1 
-            E0[0,1]= self.calibration_params['Ed2'] # coor 2
-            E0[0,2]= self.calibration_params['Ed3'] # coor 3 
-        else:
-            print('ERROR: Substrate {} is not implemented'.format(self.substrate))
-            sys.exit()
-            
-        # Set E0 in Etot 
-        for i in range(ncry):
-            Etot[i] = E0[i]
-        
-        return Etot
+    def s0(self, mol): 
+        return self.calibration_params['alpha'][mol]/(1+self.calibration_params['kd0kr0ratio'][mol] \
+                * np.exp(-(self.calibration_params['EdminusEr'][mol])/(self.kb_ev*self.temp))) #non-dimensional
 
     def get_fluxes_depo(self):
         
@@ -538,30 +555,47 @@ class CVD():
         # Get precursors fluxes on surface
         loc_fluxes = self.get_fluxes() # mol/s/m^2
         
-        # Get atomic fluxes on surface  
-        tot_fluxes = np.zeros(ncry+ncov)
-        if self.substrate == 'Si':
-            # To Do: Define stoichiometry vector (e.g. v = [1.0, 2.0, 1.0]) above in init and then 
-            # here do a scalar product e.g. 
-            # fv = np.fromiter(loc_fluxes.values(), dtype=float)
-            # Si_flux_ev =  np.dot(v, fv))
-            # In this way I can avoid the if checks below...
-            # Also, this can be a simple way of including reaction energetics. 
-            # For example, if Si2C does not contribute to Si_flux_ev with 2 Si atoms one 
-            # could use the vector [1.0, 1.8, 1.0] as v .
-            if self.precursors == ['SiH4', 'H2']:
-                # Consider the reaction barrier
-                reactf_SiH4 = np.exp(- self.calibration_params['Ereact_SiH4'] /(self.kb_ev * self.temp)) 
-                reactf_H2 = np.exp(- self.calibration_params['Ereact_H2'] /(self.kb_ev * self.temp)) 
-                tot_fluxes[0] = loc_fluxes['SiH4'] * self.calibration_params['k_Si_SiH4'] * reactf_SiH4  # Silicon
-                tot_fluxes[1] = loc_fluxes['SiH4'] * self.calibration_params['k_H_SiH4'] * reactf_SiH4 + \
-                                loc_fluxes['H2'] * self.calibration_params['k_H_H2'] * reactf_H2  # Hydrogen
-            else:
-                print('ERROR: not implemented'); sys.exit()
+        # Get atomic fluxes on surface
+        tot_fluxes = {}
+        if self.gas: # use cantera results for precursors
+            for el in self.listcry+self.listcov:
+                tot_fluxes[el] = 0
+                for mol in self.precursors:
+                    if el in self.gas.species(mol).composition:
+                        stoy = self.gas.species(mol).composition[el]
+                        tot_fluxes[el] += loc_fluxes[mol] * stoy * self.s0(mol)  # /self.NA   # Na lo abbiamo messo per compensare il fattore in alpha (18Feb2022) 
+                        # tot_fluxes[el] += loc_fluxes[mol] * stoy * self.s0(mol)  # * ( 1 - np.sum(theta) / self.at_density)     # POSSIBILE STRATEGIA ALTERNATIVA
+
         else:
-            print('ERROR: Not implemented'); sys.exit()
+            if self.substrate == 'Si':
+                # To Do: Define stoichiometry vector (e.g. v = [1.0, 2.0, 1.0]) above in init and then 
+                # here do a scalar product e.g. 
+                # fv = np.fromiter(loc_fluxes.values(), dtype=float)
+                # Si_flux_ev =  np.dot(v, fv))
+                # In this way I can avoid the if checks below...
+                # Also, this can be a simple way of including reaction energetics. 
+                # For example, if Si2C does not contribute to Si_flux_ev with 2 Si atoms one 
+                # could use the vector [1.0, 1.8, 1.0] as v .
+                if self.precursors == ['SiH4', 'H2']:
+                    # Consider the reaction barrier
+                    reactf_SiH4 = np.exp(- self.calibration_params['Ereact_SiH4'] /(self.kb_ev * self.temp)) 
+                    reactf_H2 = np.exp(- self.calibration_params['Ereact_H2'] /(self.kb_ev * self.temp)) 
+                    tot_fluxes['Si'] = loc_fluxes['SiH4'] * self.calibration_params['k_Si_SiH4'] * reactf_SiH4  # Silicon
+                    tot_fluxes['H'] = loc_fluxes['SiH4'] * self.calibration_params['k_H_SiH4'] * reactf_SiH4 + \
+                                    loc_fluxes['H2'] * self.calibration_params['k_H_H2'] * reactf_H2  # Hydrogen
+                else:
+                    print('ERROR: not implemented'); sys.exit()
+            else:
+                print('ERROR: Substrate not implemented'); sys.exit()
 
         return tot_fluxes
+
+    def get_energetics_depo(self):
+        ncry = len(self.listcry)
+        Etot=np.zeros((ncry,3))  # energetics of deposition in eV
+        for iel, el in enumerate(self.listcry):
+            Etot[iel] = self.calibration_params['Edep'][el] # list for coor 1, 2 and 3           
+        return Etot
 
     def get_PtransD(self):
         
@@ -571,7 +605,7 @@ class CVD():
 
         # Prefactor
         #freq_0 = self.mass / self.rho_surf # m^2 / mol
-        freq_0 = self.NA / self.at_density  # m^2/mol
+        # freq_0 = self.NA / self.at_density  # m^2/mol
 
         # Fluxes
         fluxes_depo = self.get_fluxes_depo()
@@ -581,24 +615,21 @@ class CVD():
         PtransDtot = np.zeros((ncry,3))
         Bolt = np.zeros((ncry,3))
         for i in range(ncry):
-            ll = np.zeros(ncry,dtype=int)
-            if ncry==1:
-                ll[-(1+i)]=1
-            elif ncry>1:
-                ll[-(1+i)]=2
-            enecoo2 = ene[tuple(np.r_[i,ll])]  # select element in matrix corresponding to coor=2; for ncry=2, consider that the 2 neighbours should be of the "other" species
-            #print('Check for Coor 2 energy used to normalize (eV): ', enecoo2)
-            # Bolt[i] = np.exp(-(ene[i] - enecoo2) / (self.kb_ev * self.temp))
-            # print('Check for Coor 2 energy used to normalize (eV): ', enecoo2)
-            Bolt[i]=np.exp(-ene[i]/(self.kb_ev * self.temp))
-            PtransDtot[i] = self.calibration_params['scalef']*self.calibration_params['Adep'] * freq_0 * fluxes_depo[i] * Bolt[i]  # at/s
+            # ll = np.zeros(ncry,dtype=int)
+            # if ncry==1:
+                # ll[-(1+i)]=1
+            # elif ncry>1:
+                # ll[-(1+i)]=2
+            # enecoo2 = ene[tuple(np.r_[i,ll])]  # select element in matrix corresponding to coor=2; for ncry=2, consider that the 2 neighbours should be of the "other" species
+            Bolt[i]=np.exp(-ene[i]/(self.kb_ev * self.temp)) # Make sure Bolt(n=2) = 1 --> Edep2 = 0
+            PtransDtot[i] = self.calibration_params['scalef'] * fluxes_depo[self.listcry[i]] * Bolt[i]  # at/s
+            print(fluxes_depo[self.listcry[i]], self.listcry[i])   
 
         return PtransDtot
 
 
     # -------------- SETUP EVAPORATION FREQUENCIES
 
-    # -------------- AUXILIARY ROUTINES
     def indices(self):
         """
         Returns a numpy array containing the indices of elements in a probability matrix for a system with:  
@@ -626,56 +657,52 @@ class CVD():
     def deltaEcov(self, indici): # perturbation for evaporation energies
         """
         If ncov is zero, return zero
-        If ncov is zero, return deltaE: energy barrier for evaporation in eV, induced by coverage
+        If ncov is not zero, return deltaEtot: energy barrier for evaporation in eV, induced by coverage
         Note:
-        H --> deltaE > 0
-        Cl --> deltaE < 0
-        BUT this is only temporary!
+        H --> increases deltaEtot
+        Cl --> decreases deltaEtot
         """
         # Optionally provide an extra adjustment 
         ncry, ncov = len(self.listcry), len(self.listcov)
-        extra = 1  
-        if self.substrate == 'SiC-3C':
-            extra = 1e1
         
-        deltaH = self.calibration_params['deltaH'] # eV     # CALIBRATE
-        deltaCl = 1e-2 # eV    # CALIBRATE
-        
-        deltaE=0
+        # Check that all keys in deltaE belong to listcov
+        if not all(item in self.listcov for item in list(self.calibration_params['deltaE'].keys())):
+            print('ERROR: Coverage species {} is not implemented'.format(self.listcov[ii]))         
+            sys.exit()
+
+        # # Check that H increases deltaEtot (deltaE values are all >=0)
+        # if not all(np.array(self.calibration_params['deltaE']['H']) >= 0):
+        #     print('ERROR: Please provide deltaE values >= 0 for H')         
+        #     sys.exit()
+        # # Check that Cl decreases deltaEtot (deltaE values are all <=0)
+        # if not all(np.array(self.calibration_params['deltaE']['Cl']) <= 0):
+        #     print('ERROR: Please provide deltaE values <= 0 for Cl')         
+        #     sys.exit()
+
+        deltaEtot=0
         if ncov!=0:
             covn = indici[ncry:]
             for ii,nn in enumerate(covn):
-                # CASE: H
-                if self.listcov[ii] == 'H': 
-                    deltaE += nn*deltaH*extra  
-                # CASE: Cl
-                elif self.listcov[ii] == 'Cl':
-                    deltaE -= nn*deltaCl*extra 
-                else:
-                    print('ERROR: Coverage species {} is not implemented'.format(self.listcov[ii]))         
-                    exit(0)
-        return deltaE
+                # deltaEtot += self.calibration_params['deltaE'][self.listcov[ii]] * nn  # # deltaE should be a dict with scalar items
+                if nn!=0: deltaEtot += self.calibration_params['deltaE'][self.listcov[ii]][nn-1] # deltaE here should be a dict with dim(3)array items  
+        return deltaEtot
 
     def get_dims(self):
         ncry, ncov = len(self.listcry), len(self.listcov)
         return np.ones(ncry+ncov, dtype=int)*4    
-
 
     def get_energetics_evap(self):
         ncry, ncov = len(self.listcry), len(self.listcov)
         dims = self.get_dims()
         Etot=np.zeros((ncry,*dims))  # energetics of evaporation in eV
         
-        if self.substrate == 'Si':
+        for iel, el in enumerate(self.listcry):
             # Energetics for evaporation without coverage neighbours
             dims0 = np.ones(ncry, dtype=int)*4
             E0 = np.zeros((ncry,*dims0))
-            E0[0,1] = self.calibration_params['Ee1'] # 1coor, no coverage
-            E0[0,2] = self.calibration_params['Ee2'] # 2coor, no coverage 
-            E0[0,3] = self.calibration_params['Ee3'] # 3coor, no coverage
-        else:
-            print('ERROR: Substrate {} is not implemented'.format(self.substrate))
-            sys.exit()
+            E0[0,1] = self.calibration_params['Eev'][el][0] # 1coor, no coverage
+            E0[0,2] = self.calibration_params['Eev'][el][1] # 2coor, no coverage 
+            E0[0,3] = self.calibration_params['Eev'][el][2] # 3coor, no coverage
             
         # Set E0 in Etot and allocate extra dimensions for coverages
         if ncov==0:
@@ -700,8 +727,18 @@ class CVD():
                     Etot[indd] = Etot[indd0] + self.deltaEcov(ind) 
                     # the minus sign is because the Boltzmann exponential will be positive, 
                     # and we want evap probability to decrease if deltaE > 0
-        
         return Etot
+
+    def get_kevap(self):
+        # Get atomic fluxes on surface
+        tot_kevap = {}
+        for el in self.listcry+self.listcov:
+            tot_kevap[el] = 0
+            for mol in self.precursors:
+                if el in self.gas.species(mol).composition:
+                    stoy = self.gas.species(mol).composition[el]
+                    tot_kevap[el] += stoy * self.calibration_params['kevap_A'][mol] * np.exp(-self.calibration_params['kevap_E'][mol]/(self.kb_ev*self.temp))
+        return tot_kevap
 
     def get_PtransE(self):    
 
@@ -709,86 +746,49 @@ class CVD():
         ene = self.get_energetics_evap()
         print('\nEvaporation energetics:\n {}'.format(ene))
 
-        # Prefactor
-        #freq_0 = self.mass / self.rho_surf # m^2 / mol
-        freq_0 = self.NA / self.at_density  # m^2/mol
-        
+        # Evaporation rates
+        kevap = self.get_kevap()
+
         # Calculate Frequencies
         ncry, ncov = len(self.listcry), len(self.listcov)
         dims = self.get_dims()
         PtransEtot = np.zeros((ncry,*dims))
-        Bolt, norm = np.zeros((ncry,*dims)), np.zeros(ncry)                
-        fluxes_from_vapor_pressure = np.zeros(ncry)
+        Bolt = np.zeros((ncry,*dims))
         for i in range(ncry):
-            ll = np.zeros(ncry,dtype=int)
-            ll[-(1+i)]=2
-            enecoo2 = ene[tuple(np.r_[i,ll,np.zeros(ncov, dtype=int)])]  # select element in matrix corresponding to coor=2; for ncry=2, consider that the 2 neighbours should be of the "other" species
-            # Bolt[i]=np.exp(-(ene[i] - enecoo2)/(self.kb_ev * self.temp))
-            # print('Check for Coor 2 energy used to normalize (eV):', enecoo2)
             Bolt[i] = np.exp(-ene[i]/ (self.kb_ev * self.temp))
-            # Get fluxes from vapor pressure
-            # fluxes_from_vapor_pressure[i] = self.get_flux(self.listcry[i], vapor_pressure=True) # mol/s/m^2
-            # PtransEtot[i] = freq_0*fluxes_from_vapor_pressure[i]*Bolt[i]* self.calibration_params['scalef'] * self.calibration_params['Aev'] # at/s
-            PtransEtot[i] = self.calibration_params['scalef'] * (self.Td * self.kb_ev / self.h) * (self.calibration_params['Aev'] * self.temp + self.calibration_params['Bev']) * Bolt[i] # at/s
+            PtransEtot[i] = self.calibration_params['scalef'] * kevap[self.listcry[i]] * Bolt[i] # at/s
+            print(kevap[self.listcry[i]], self.listcry[i])
 
         return PtransEtot
+
+
 
     # -------------- SETUP ABSORPTION FREQUENCIES
 
     def get_energetics_abs(self):
         ncov = len(self.listcov)
         Etot=np.zeros((ncov,3))  # energetics of absorption in eV
-        
-        if self.listcov == ['H']:
-            E0=np.zeros((ncov,3)) 
-            E0[0,0]= self.calibration_params['Eabs1'] # coor 1   # <---- TO BE CALIBRATED
-            E0[0,1]= self.calibration_params['Eabs2'] # coor 2   # <---- TO BE CALIBRATED
-            E0[0,2]= self.calibration_params['Eabs3'] # coor 3   # <---- TO BE CALIBRATED
-        else:
-            print('ERROR: Not implemented')
-            exit(0)
-            
-        # Set E0 in Etot 
-        for i in range(ncov):
-            Etot[i] = E0[i]
-        
+        for iel, el in enumerate(self.listcov):
+            Etot[iel] = self.calibration_params['Eabs'][el] # list for coor 1, 2 and 3   # <---- TO BE CALIBRATED        
         return Etot
 
     def get_PtransAbs(self):    
         # Initialize probability matrix with dimension depending on NCrystal and NCov
-        
         # Energetics for absorption
         ene = self.get_energetics_abs()
         print('\nAbsorption energetics:\n {}'.format(ene))
 
-        # Prefactor
-        #freq_0 = self.mass / self.rho_surf # m^2 / mol
-        freq_0 = self.NA/self.at_density #m^2/mol
-        
         # Fluxes
         fluxes_depo = self.get_fluxes_depo()
 
-        # Energy barrier(T) #MMonCa
-        self.eads=self.calibration_params['aads']-self.calibration_params['bads']*self.kb_ev*self.temp
-
         # Calculate Frequencies
-        ncry, ncov = len(self.listcry), len(self.listcov)
-        PtransAbstot = np.zeros((ncry,3))
-        Bolt = np.zeros((ncry,3))
+        ncov = len(self.listcov)
+        PtransAbstot = np.zeros((ncov,3))
+        Bolt = np.zeros((ncov,3))
         for i in range(ncov):
-            ll = np.zeros(ncov,dtype=int)
-            if ncry==1:
-                ll[-(1+i)]=1    
-            elif ncry>1:
-                ll[-(1+i)]=2
-            # enecoo2 = ene[tuple(np.r_[i,ll])]  # select element in matrix corresponding to coor=2; for ncry=2, consider that the 2 neighbours should be of the "other" species
-            #print('Check for Coor 2 energy used to normalize (eV): ', enecoo2)
-            #Bolt[i]=np.exp(-(ene[i] - enecoo2)/(self.kb_ev * self.temp))
-            Bolt = np.exp(-self.eads/ (self.kb_ev * self.temp))
-            PtransAbstot[i] = self.calibration_params['scalef'] * freq_0 * self.calibration_params['s0'] * fluxes_depo[ncry+i] * Bolt # at/s
-            #PtransAbstot[i] = fluxes_depo[ncry+i] #piecewise check
-            #PtransAbstot[i] = self.pressure['H2']*pow(2*math.pi*self.M_H*2*self.Rgas*self.temp,-0.5) #piecewise check
-
+            Bolt = np.exp(-ene/ (self.kb_ev * self.temp))
+            PtransAbstot[i] = self.calibration_params['scalefcov'] * fluxes_depo[self.listcov[i]] * Bolt[i] # at/s
+            print(fluxes_depo[self.listcov[i]], self.listcov[i])
         return PtransAbstot 
 
     # -------------- SETUP DESORPTION FREQUENCIES
@@ -796,20 +796,8 @@ class CVD():
     def get_energetics_des(self):
         ncov = len(self.listcov)
         Etot=np.zeros((ncov,3))  # energetics of absorption in eV
-        
-        if self.listcov == ['H']:
-            E0=np.zeros((ncov,3)) 
-            E0[0,0]= self.calibration_params['Edes1'] # coor 1   # <--- TO BE CALIBRATED
-            E0[0,1]= self.calibration_params['Edes2'] # coor 2   # <--- TO BE CALIBRATED
-            E0[0,2]= self.calibration_params['Edes3'] # coor 3   # <--- TO BE CALIBRATED
-        else:
-            print('ERROR: Not implemented')
-            exit(0)
-            
-        # Set E0 in Etot 
-        for i in range(ncov):
-            Etot[i] = E0[i]
-        
+        for iel, el in enumerate(self.listcov):
+            Etot[iel] = self.calibration_params['Edes'][el] # list for coor 1, 2 and 3   # <---- TO BE CALIBRATED
         return Etot
 
     def get_PtransDes(self):    
@@ -819,19 +807,20 @@ class CVD():
         ene = self.get_energetics_des()
         print('\nDesorption energetics:\n {}'.format(ene))
 
-        # Prefactor
-        # we have no fluxes now, so we should convert freq in s^-1
-        freq = self.kb_ev*self.Td / self.h   # clock of surface
-        print('freq: ',freq)
+        # Evaporation rates
+        kevap = self.get_kevap()
 
-        ncry, ncov = len(self.listcry), len(self.listcov)
+        ncov = len(self.listcov)
         PtransDestot = np.zeros((ncov,3))
         Bolt = np.zeros((ncov,3))
         for i in range(ncov):
             Bolt[i]=np.exp(-ene[i]/(self.kb_ev * self.temp))   # non normalizziamo ocn enecoo2 qui, perché quel ragionamento sul coor=2 che riproduce l'andamento medio vale quando il prefattore è funzione del flusso
-            PtransDestot[i] = self.calibration_params['scalef'] * self.calibration_params['Ades'] * Bolt[i] # at/s
-
+            PtransDestot[i] = self.calibration_params['scalefcov'] * kevap[self.listcov[i]] * Bolt[i] # at/s
+            print(kevap[self.listcov[i]], self.listcov[i])
         return PtransDestot
+
+
+
 
 
 # ----------------------------------------------------------------------------------------------------------------------
