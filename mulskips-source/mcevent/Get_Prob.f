@@ -73,6 +73,23 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
       INTEGER iCov,covNNsum
       REAL(8) :: PDep,PAbs
 
+      ! Only if Silicon trench, interpolate probabilities from external table based on local temperature value 
+      IF((InitSt.EQ.'ST').AND.(.NOT.fixedT))THEN
+!      IF(InitSt.EQ.'ST')THEN
+        temperature = IBITS(LattCoo(Site(1),Site(2),Site(3)),PosT,LenT) ! K
+        IF(temperature.EQ.0)THEN
+           write(*,*)'Temperature is zero in get_prob().' 
+           write(*,*)'Are you sure that it should be like this?'
+           write(*,*)'IMPORTANT: check that the temperature is reset'
+           write(*,*)'every time LattCoo is put =0 in the other '
+           write(*,*)'routines (e.g. evaporation.f)!!!'
+           write(*,*)'Stopping now...'
+           STOP
+        END IF
+        CALL InterpProbFromField(temperature)
+      END IF
+
+
       IF((CovInd.GT.0).AND.(CovInd.LT.113))THEN ! desorption 
         IF(Occ.NE.0)THEN
           write(*,*)'ERROR Covind!=0 with Occ!=0 in get_prob'
@@ -113,16 +130,22 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
           ! PtransD here is 2 * (Psi_L - Psi_S) / Tm (it has to be divided by kb)
           temperature = IBITS(LattCoo(Site(1),Site(2),Site(3)),
      >        PosT,LenT) ! K
+          IF(temperature.EQ.0)THEN
+             write(*,*)'Temperature is zero in get_prob().' 
+             write(*,*)'Are you sure that it should be like this?'
+             write(*,*)'IMPORTANT: check that the temperature is reset'
+             write(*,*)'every time LattCoo is put =0 in the other '
+             write(*,*)'routines (e.g. evaporation.f)!!!'
+             write(*,*)'Stopping now...'
+             STOP
+          END IF
           ! Melting
-!          write(*,*)"temperature ", temperature
-!          write(*,*)"PtransD ", PtransD
           PE = P0 * EXP(-PtransE/(kb*temperature)) 
      >            * merge(1.d0,0.d0,PtransE.NE.0.d0)        ! Set PE to zero for all array elements not specified in start.dat (e.g. (1,0,0) or (1,3,1))
           ! Solidification
           PD = 0.5d0 * P0 * EXP(-PtransD/(kb*Tm)) * 
      >      (1.0d0 + ERF((temperature - Tflex) / sigma)) 
      >            * merge(1.d0,0.d0,PtransD.NE.0.d0)        ! Set PD to zero for all array elements not specified in start.dat (so this determines whether 2nd or third crystal species will be deposited)
-!          write(*,*)"PD ", PD
 !         PD = 0.5d0 * P0 * EXP(-PtransD/kb)    
         ELSE
           PE = PtransE
@@ -141,13 +164,14 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
                Pcurr=random(idum)*Ptot
                IF(Pcurr.LE.PDep)THEN  ! deposition
                  IF(Pcurr.LE.PD(1,Coor))THEN
-!                   write(*,*)'depositing Si'
+!                   write(*,*)'depositing Si',CoorNN
                    Index_Event = 1
                  ELSE
 !                   write(*,*)'depositing C'
                    Index_Event = 2
                  END IF
                ELSE  ! absorption
+!                 write(*,*)'absorbing somth with coor', CoorNN
                  Index_Event = IndexEvent_Abs(Coor,Pcurr,PDep)
                END IF
                Prob_Event = Ptot
@@ -180,8 +204,7 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
                 write(*,*)'anomalous coordination'
              END IF
           ELSE
-             write(*,*)'anomalous coordination'
-             write(*,*)Coor
+             write(*,*)'anomalous coordination',Coor
           END IF
         ELSE ! Occ=1 Evaporation
           N_Si=0
@@ -262,7 +285,6 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
              write(*,*)Coor,N_Si,N_C,N_wall,covNNsum               
      >          ,'Get Prob Error N_Si+N_C+N_wall.NE.Coor'
              write(*,*)Site,Occ,NSiC,CovInd,Coor,covNN
-             write(*,*)covNN
              STOP
           END IF
           IF (N_Si+N_C+N_wall.GT.3)THEN                                ! note: Coor is not changed by coverage!

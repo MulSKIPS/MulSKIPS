@@ -36,11 +36,41 @@
       REAL(8) :: kb=0.00008617330350d0 ! [eV/K]
       INTEGER temperature
 
+      
+
+      ! Only if Silicon trench, interpolate probabilities from external table based on local temperature value 
+      IF((InitSt.EQ.'ST').AND.(.NOT.fixedT))THEN
+!      IF(InitSt.EQ.'ST')THEN
+        temperature = IBITS(LattCoo(Site(1),Site(2),Site(3)),PosT,LenT) ! K
+        IF(temperature.EQ.0)THEN
+           write(*,*)'Temperature is zero in get_prob_ini().' 
+           write(*,*)'Are you sure that it should be like this?'
+           write(*,*)'IMPORTANT: check that the temperature is reset'
+           write(*,*)'every time LattCoo is put =0 in the other '
+           write(*,*)'routines (e.g. evaporation.f)!!!'
+           write(*,*)'Stopping now...'
+           STOP
+        END IF
+        CALL InterpProbFromField(temperature)
+      END IF
+
+
+
+
       IF(InitSt.EQ.'LA')THEN
         ! Ref. La Magna etal PRB 75, 235201 (2007)
         ! PtransE here is n_s * (Psi_L - Psi_S) (it has to be divided by kb*T)
         ! PtransD here is 2 * (Psi_L - Psi_S) / Tm (it has to be divided by kb)
         temperature = IBITS(LattCoo(Site(1),Site(2),Site(3)),PosT,LenT) ! K
+        IF(temperature.EQ.0)THEN
+           write(*,*)'Temperature is zero in get_prob_ini().' 
+           write(*,*)'Are you sure that it should be like this?'
+           write(*,*)'IMPORTANT: check that the temperature is reset'
+           write(*,*)'every time LattCoo is put =0 in the other '
+           write(*,*)'routines (e.g. evaporation.f)!!!'
+           write(*,*)'Stopping now...'
+           STOP
+        END IF
         ! Melting
         PE = P0 * EXP(-PtransE/(kb*temperature)) 
      >          * merge(1.d0,0.d0,PtransE.NE.0.d0)        ! Set PE to zero for all array elements not specified in start.dat (e.g. (1,0,0) or (1,3,1))

@@ -41,9 +41,11 @@
       INTEGER :: OPF16,OPF17,IQstat,Coo
       INTEGER :: LenOut(LenX*LenY)
       INTEGER :: LenSaveOut(LenX*LenY)
+      REAL(8) :: angle ! degrees
+      REAL(8) :: Ttop, Tbottom ! Kelvin
 
 ! Random NumBer
-      REAL(8) :: Pi=3.14159265358979323
+      REAL(8) :: Pi=3.1415926535897932384626433832795028841971
       REAL(8)  :: Time=0.,Dt,Patom
       INTEGER :: Site(3),Coord,Nbon,Njum,Jump,ijump,CovInd
       INTEGER :: Site1(3),Site2(3),SiteC(3),Newsite(3,2)
@@ -102,6 +104,13 @@
       READ(IPF,*)InitSt
       IF(InitSt.EQ.'FF')THEN
         READ(IPF,*)Len1,Len2,Len3,Len4
+      ELSE IF(InitSt.EQ.'ST')THEN
+        READ(IPF,*)Len1,Len2,Len3,angle,Ttop,Tbottom
+        write(*,*)'Temperature on top in Kelvin: ', Ttop
+        write(*,*)'Temperature on bottom in Kelvin: ', Tbottom
+        IF(Ttop.EQ.Tbottom)THEN
+          fixedT = .TRUE.
+        END IF
       ELSE IF(InitSt.EQ.'IN')THEN
         READ(IPF,'(A)')cadfilename
       ELSE IF(InitSt.EQ.'LA')THEN
@@ -197,9 +206,12 @@
       END IF 
 
       ! Setup Probabilities for KMC events
-      CALL SetProbability()
+      IF(InitSt.EQ.'ST')THEN
+        CALL SetProbabilityFromField()
+      ELSE
+        CALL SetProbability()
+      END IF
       CALL AllocateArrays()
-
 
       ! ------------------------------------------END INPUT
 
@@ -244,6 +256,8 @@
          CALL SetNC(Len1,Len2,Len3)
       ELSE IF(InitSt.EQ.'T')THEN
          CALL SetTrench(Len1,Len2,Len3)
+      ELSE IF(InitSt.EQ.'ST')THEN
+         CALL SetTrenchSi(Len1,Len2,Len3,angle,Ttop,Tbottom) ! angle float in degrees
       ELSE IF(InitSt.EQ.'E')THEN
          SiteC(1)=Len2
          SiteC(2)=Len3

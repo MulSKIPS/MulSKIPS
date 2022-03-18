@@ -30,19 +30,16 @@
       INTEGER indices(6)
 
       
-C      At some point we should define blocks in start.dat (prob_evap, prob_depo, simul_param, etc). 
-C      In this way, for example, we can declare probs of depo before evap in start.dat, or abs before evap, etc
-C      Also, we can easily check if the number of entries and other things are OK   
-C      IF(blabla .NE. maxElines)THEN
-C        write(*,*)'Wrong number of Evaporation Probabilities')
-C        STOP
-C      END IF
+      !      At some point we should define blocks in start.dat (prob_evap, prob_depo, simul_param, etc). 
+      !      In this way, for example, we can declare probs of depo before evap in start.dat, or abs before evap, etc
+      !      Also, we can easily check if the number of entries and other things are OK   
+      !      IF(blabla .NE. maxElines)THEN
+      !        write(*,*)'Wrong number of Evaporation Probabilities')
+      !        STOP
+      !      END IF
+      !      Also: should we check for duplicates?
 
-C      Also: should we check for duplicates?
-
-
-
-!!!!!!!! EVAPORATION !!!!!!!!
+      !!!!!!!! EVAPORATION !!!!!!!!
 
       PtransE=0.d0 ! not allowed case (e.g. 1,0,0) or (1,3,1) the default is 0
 
@@ -103,7 +100,7 @@ C     >     NCrystalMax+NCov),PtransE(indsp,indices(1),indices(2),
 C     >     indices(3),indices(4),indices(5),indices(6))
       END DO
 
-!!!!!!!! DEPOSITION !!!!!!!!
+      !!!!!!!! DEPOSITION !!!!!!!!
 
       DO j=1,NCrystal*3
         READ(IPF,*)indsp,elind,PtransD(indsp,elind)
@@ -116,7 +113,7 @@ C         write(*,*)indsp,elind,PtransD(indsp,elind)
       END DO
 
 
-!!!!!!!! ABSORPTION !!!!!!!!
+      !!!!!!!! ABSORPTION !!!!!!!!
 
       DO j=1,NCov*3
         READ(IPF,*)indsp,elind,PtransAbs(indsp-NCrystal,elind)
@@ -129,7 +126,7 @@ C         write(*,*)indsp,elind,PtransAbs(indsp-NCrystal,elind)
       END DO
 
 
-!!!!!!!! DESORPTION !!!!!!!!
+      !!!!!!!! DESORPTION !!!!!!!!
 
       DO j=1,NCov*3
         READ(IPF,*)indsp,elind,PtransDes(indsp-NCrystal,elind)

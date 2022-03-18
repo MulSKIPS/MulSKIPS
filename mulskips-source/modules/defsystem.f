@@ -55,14 +55,27 @@
        TYPE(Vacancy), DIMENSION(NumVdMax) :: ListVoid ! TODO: per aggiustare il SEG FAULT dovuto a vacancies z=0, sarebbe buono mettere sempre un wall a z=0 
        TYPE(AtBuffer), DIMENSION(NumBfMax) :: ListAtBuffer
        REAL(8), DIMENSION(NCrystalMax,1:NTransD) :: PTransD
-       REAL(8), DIMENSION(NCrystalMax,0:NTransE2,0:NtransE2,0:NtransE2,
-     >                     0:NtransE2,0:NtransE2,0:NtransE2) :: PTransE ! TODO: dovrebbe essere una funzione quando introdurremo T dependence. A quel punto introdurremo anche walls meglio
+       REAL(8), DIMENSION(NCrystalMax,0:NTransE2,0:NTransE2,0:NTransE2,
+     >                     0:NTransE2,0:NTransE2,0:NTransE2) :: PTransE ! TODO: dovrebbe essere una funzione quando introdurremo T dependence. A quel punto introdurremo anche walls meglio
        REAL(8), DIMENSION(NCovMax,0:NTransD) :: PTransAbs
        REAL(8), DIMENSION(NCovMax,0:NTransD) :: PTransDes
        REAL(8) :: PtransZig
        REAL(8), DIMENSION(NCrystalMax,1:NTransD) :: PD  ! needed for LA
-       REAL(8), DIMENSION(NCrystalMax,0:NTransE2,0:NtransE2,0:NtransE2,
-     >                     0:NtransE2,0:NtransE2,0:NtransE2) :: PE  ! needed for LA
+       REAL(8), DIMENSION(NCrystalMax,0:NTransE2,0:NTransE2,0:NTransE2,
+     >                     0:NTransE2,0:NTransE2,0:NTransE2) :: PE  ! needed for LA
+
+
+      ! Store tabulated PtransE, PtransD, PtransDes, and PtransAbs as arrays of dimension ntempMax
+      INTEGER, PARAMETER :: ntempMax=300
+      INTEGER :: ntemp, nprob
+      LOGICAL :: fixedT
+      INTEGER, DIMENSION(ntempMax) :: reftempvalues
+      REAL(8), DIMENSION(ntempMax,NCrystalMax,1:NTransD) :: refPTransD
+      REAL(8), DIMENSION(ntempMax,NCrystalMax,0:NTransE2,0:NTransE2,
+     >      0:NTransE2,0:NTransE2,0:NTransE2,0:NTransE2) :: refPTransE 
+      REAL(8), DIMENSION(ntempMax,NCovMax,0:NTransD) :: refPTransAbs
+      REAL(8), DIMENSION(ntempMax,NCovMax,0:NTransD) :: refPTransDes
+
 
        REAL(8) :: EBind=0.8,EBind1=1.,EbindG=2.5,Energ,Enemed
        REAL(8) :: EevapC=2.5,EevapSi=0.5

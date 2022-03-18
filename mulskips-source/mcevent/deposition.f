@@ -143,6 +143,7 @@
                 ListAdAtom(IndNN) % NextNXYZ = NextNN
                 CALL Get_Prob(0,0,CovInd,CoorNN,NextN(1:3,i),NextNN,
      >                      Index_Event,Prob) ! Occ=1/0 NSiC 1=01 Si, 2=10 C
+
                 IF(Index_Event.EQ.0)THEN
                   CALL EraseMC(NextN(1:3,i))
                   CALL AddVoid(NextN(1:3,i),NextNN)
@@ -171,6 +172,7 @@
 C                 IF((CovInd.GT.0).AND.(CoorNN.EQ.4)) at this point, get_prob should put it in ListVoid! It bahaves as a vacancy 
                 CALL Get_Prob(0,0,CovInd,CoorNN,NextN(1:3,i),NextNN,
      >                      Index_Event,Prob) ! Occ=1/0 NSiC 1=01 Si, 2=10 C
+
                 IF(Index_Event.EQ.0)THEN
                   !write(*,*)"Dep. Vacancy Generation",NextN(1:3,i)
                   CALL EraseMC(NextN(1:3,i))
@@ -209,6 +211,7 @@ C                 IF((CovInd.GT.0).AND.(CoorNN.EQ.4)) at this point, get_prob sh
      >                  PosSiC,LenSiC)
                 CALL Get_Prob(1,SiOrC,CovInd,CoorNN,NextN(1:3,i),NextNN,     ! Set evaporation probability (can vary depending on coverage and coor) (Here CovInd can only be zero!!!)
      >                    Index_Event,Prob) ! Occ=1/0 NSiC 1=01 Si, 2=10 C
+                
                 IF(Index_Event.EQ.0)THEN                                ! Set Bulk also If CoorNN reaches 4 
                 !write(*,*)"Dep. Bulk Site Generation",Index_Event,Prob
                   CALL EraseMC(NextN(1:3,i))
@@ -234,6 +237,7 @@ C                 IF((CovInd.GT.0).AND.(CoorNN.EQ.4)) at this point, get_prob sh
       IF(Coor.NE.CoorOld)CALL MVBITS(Coor,0,LenCoor,LattCoo(Site(1),
      >                               Site(2),Site(3)),PosCoor)
       CALL Get_Prob(1,IAtom,0,Coor,Site,NextN,Index_Event,Prob) ! Occ=1/0 NSiC 1=01 Si, 2=10 C ! Here CovInd=0 by definition
+      
       IF(Index_Event.EQ.0)THEN
                 !write(*,*)"Dep. Bulk Site Generation",Index_Event,Prob
         CALL EraseMC(Site(1:3))

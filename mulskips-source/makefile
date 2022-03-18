@@ -19,14 +19,15 @@ $(INITDIR)/SetSiCSF.f $(INITDIR)/SetSiGex.f \
 $(INITDIR)/SetSiC3Cww.f $(INITDIR)/SetSiC3Cwwaperture.f $(INITDIR)/SetSi.f $(INITDIR)/SetSiFINFET.f \
 $(INITDIR)/SetCAD.f $(INITDIR)/SetT.f \
 $(INITDIR)/SetAPBSymZimb1.f  $(INITDIR)/SetInvPOff.f  $(INITDIR)/SetInvPwOnlySiorC.f \
-$(INITDIR)/SetTrench.f $(INITDIR)/SetAPBSymZimb.f   $(INITDIR)/SetInvPSi.f   $(INITDIR)/SetNC.f \
+$(INITDIR)/SetTrenchSi.f $(INITDIR)/SetTrench.f $(INITDIR)/SetAPBSymZimb.f   $(INITDIR)/SetInvPSi.f   $(INITDIR)/SetNC.f \
 $(INOUDIR)/FileClose.f  $(INOUDIR)/GetOutputFileName.f  $(INOUDIR)/WriteMolMolXYZFile.f $(INOUDIR)/FileOpen.f $(INOUDIR)/WriteMolMolSource.f \
 $(LATTDIR)/FIND_NN.f  $(LATTDIR)/FIND_SN.f \
 $(MCEVDIR)/Add.f $(MCEVDIR)/Evaporation.f $(MCEVDIR)/PickTreeEvent.f  $(MCEVDIR)/UpdateTree.f \
 $(MCEVDIR)/AllocateArrays.f  $(MCEVDIR)/Get_Prob.f  $(MCEVDIR)/random.f \
 $(MCEVDIR)/deposition.f  $(MCEVDIR)/Get_Prob_Ini.f $(MCEVDIR)/SetProbability.f\
 $(MCEVDIR)/Erase.f  $(MCEVDIR)/IF_Arm_Choice.f $(MCEVDIR)/UpdateCoor.f main.f \
-$(MCEVDIR)/absorption.f  $(MCEVDIR)/desorption.f 
+$(MCEVDIR)/absorption.f  $(MCEVDIR)/desorption.f \
+$(MCEVDIR)/InterpProbFromField.f  $(MCEVDIR)/SetProbabilityFromField.f
 
 OBJS = $(SOURCE:.f=.o)
 clean :         

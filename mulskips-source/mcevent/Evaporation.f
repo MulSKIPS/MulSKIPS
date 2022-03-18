@@ -65,7 +65,7 @@
               END DO
               IF(Recipr)THEN ! this empty site has not now any NN is must be deleted from the MC list
                   CALL EraseMC(NextN(1:3,i)) ! out of the MC particles
-                  IF(InitSt.EQ.'LA')THEN
+                  IF((InitSt.EQ.'LA').OR.(InitSt.EQ.'ST'))THEN
                     temperature = IBITS(LattCoo(NextN(1,i),NextN(2,i),
      >             NextN(3,i)),PosT,LenT) ! K
                     LattCoo(NextN(1,i),NextN(2,i),NextN(3,i))=0
