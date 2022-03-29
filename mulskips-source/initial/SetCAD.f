@@ -95,7 +95,12 @@
 
         write(*,*)'Reading input geometry file: ', cadfilename
         IPF50=50
-        OPEN(IPF50,FILE=cadfilename,STATUS='OLD')      
+        OPEN(IPF50,FILE=cadfilename,STATUS='OLD')     
+        ! read and ignore lines in cadfilename which relate to z of wall sites
+        DO z=0,3
+          READ(IPF50,*)LenIn 
+        END DO  
+        ! Now start reading properly cadfilename           
         DO z=4,LenZ-5
           READ(IPF50,*)LenIn
           DO y=0,LenY-1
