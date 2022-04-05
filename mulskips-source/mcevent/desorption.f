@@ -28,13 +28,25 @@
       USE Definitions
 
       IMPLICIT NONE
-      INTEGER IndAtom,IndNN,Index_Event,CovIndN
+      INTEGER IndAtom,IndNN,Index_Event,CovIndN,CovInd
       INTEGER i,j,Coor,OccN,CoorN,SiOrC
       INTEGER Site(3),NextN(3,4),NextNN(3,4)
       REAL(8) Prob
       LOGICAL Recipr
 
       Site=ListAdAtom(IndAtom) % AtomXYZ
+
+      CovInd=IBITS(LattCoo(Site(1),Site(2),Site(3)),
+     >                  PosIndex,LenIndex)
+      ! Reduce number of corresponding coverage atom
+      IF(CovInd.EQ.ListCov(1))THEN
+        CountCov(1) = CountCov(1) - 1
+      ELSE IF(CovInd.EQ.ListCov(2))THEN
+        CountCov(2) = CountCov(2) - 1
+      ELSE IF(CovInd.EQ.ListCov(3))THEN
+        CountCov(3) = CountCov(3) - 1
+      END IF
+
       Coor=IBITS(LattCoo(Site(1),Site(2),Site(3)),PosCoor,LenCoor)
       CALL MVBITS(0,0,LenIndex,
      >            LattCoo(Site(1),Site(2),Site(3)),PosIndex)  ! Unset coverage

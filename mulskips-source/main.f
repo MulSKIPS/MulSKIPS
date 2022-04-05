@@ -38,7 +38,7 @@
       INTEGER :: MGigaCycle=400,IGigaCycle=0,Kilo=1000,Mega=1000000
       INTEGER :: MaxZeta=10000
       INTEGER :: Len=LenZ-1,Len1=120,Len2=120,Len3=120,Len4=120
-      INTEGER :: OPF16,OPF17,IQstat,Coo
+      INTEGER :: OPF16,OPF17,IQstat,Coo,Occ
       INTEGER :: LenOut(LenX*LenY)
       INTEGER :: LenSaveOut(LenX*LenY)
       REAL(8) :: angle ! degrees
@@ -70,6 +70,8 @@
       NumAtoms=0
       NumVoids=0
       NumAdAtom=0
+      CountCrystal=0
+      CountCov=0
      
       write(*,*)'KMC box size: ',LenX, LenY, LenZ
  
@@ -282,7 +284,9 @@
          STOP
       END IF
 
+
       write(*,*)'Atoms,Voids,AdAtoms',NumAtoms,NumVoids,NumAdAtom
+      CountCrystalOld = CountCrystal
       CALL WriteMolMolSource(Time, IterOut, framecounter)
       
       ! --------------------------- START KMC loop
@@ -324,6 +328,7 @@ C           IF(MOD(Iter,OutMolMol).EQ.0)THEN
 C             write(*,*)'Iter',Iter,' Deposition',Ind,Patom,Itrans
 C           END IF
            CALL Deposition(Ind,Itrans)
+           CountCrystal(Itrans) = CountCrystal(Itrans) + 1
          CASE (3) ! evaporation of crystal species
 C            IF(MOD(Iter,OutMolMol).EQ.0)THEN
 C              write(*,*)'Iter',Iter,'Evaporation',Ind,Patom
@@ -338,7 +343,13 @@ C      >      IBITS(LattCoo(Site(1),Site(2),Site(3)),PosIndex,LenIndex)
            CovInd = ListCov(Itrans-4)
 C            write(*,*)'Iter',Iter,Ind,Patom,'absorption of',CovInd
            CALL absorption(Ind,CovInd)
+           CountCov(Itrans-4) = CountCov(Itrans-4) + 1
        END SELECT
+
+C        IF(MOD(Iter, 1000).EQ.0)THEN
+C          write(*,*)'diff', CountCrystal-CountCrystalOld
+C          CountCrystalOld = CountCrystal
+C        END IF
 
        Iter = Iter +1
 
@@ -350,6 +361,7 @@ C            write(*,*)'Iter',Iter,Ind,Patom,'absorption of',CovInd
 C          CASE ('Zeta') 
 C            IF (Site(3).GT.MaxZeta) exit
        END SELECT
+
 
       END DO
       ! --------------------------- END KMC loop
@@ -396,8 +408,9 @@ C            IF (Site(3).GT.MaxZeta) exit
             DO i=0,LenX-1
               IQstat = IBITS(LattCoo(i,j,k),PosIndex,LenIndex)
               Coo    = IBITS(LattCoo(i,j,k),PosCoor,LenCoor)
+              Occ    = IBITS(LattCoo(i,j,k),PosOcc,LenOcc)
               IF(IQStat.NE.113)THEN
-                LenOut(1+i+LenX*j)=Coo
+                IF(Occ.EQ.1) LenOut(1+i+LenX*j)=Coo
               ELSE
                 LenOut(1+i+LenX*j)=10 ! Write 10 if site = wall
               END IF

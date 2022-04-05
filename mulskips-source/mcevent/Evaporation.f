@@ -38,6 +38,8 @@
 
       Site=ListAdAtom(IndAtom) % AtomXYZ
       IAtom=IBITS(LattCoo(Site(1),Site(2),Site(3)),PosSiC,LenSiC)
+      CountCrystal(IAtom) = CountCrystal(IAtom) - 1
+      
       Coor=IBITS(LattCoo(Site(1),Site(2),Site(3)),PosCoor,LenCoor) ! not used
       !write(*,*)'Evaporation Site',Site,Coor
       CALL MVBITS(0,0,LenOcc,

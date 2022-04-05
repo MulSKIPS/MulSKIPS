@@ -28,6 +28,7 @@
       INTEGER(kind=k10) :: Iter
       INTEGER :: Iout
       REAL(8)     Time
+      REAL(8), DIMENSION(NCrystalMax) :: diff
 
       INTEGER FN
       CHARACTER(Len=13) :: XYZFileName,SourceFileName,GifFileName
@@ -38,6 +39,22 @@
       CHARACTER(Len=6)  :: WrongExt='_w.xyz'
       CHARACTER(Len=4)  :: GifExt='.gif'
 
+      IF(Iter.NE.0)THEN
+        write(*,*)'SUM(CountCrystal)', SUM(CountCrystal)
+        write(*,*)'CountCrystal', CountCrystal
+        write(*,*)'CountCrystalOld', CountCrystalOld
+        diff=FLOAT(CountCrystal-CountCrystalOld)
+        write(*,*)'diff', diff
+        write(*,*)'xGesolid', diff/
+     >                     (SUM(CountCrystal)-SUM(CountCrystalOld))
+        ! Update Old counts
+        CountCrystalOld = CountCrystal
+        ! Write out coverage counts 
+        IF(NCov.NE.0)THEN
+          write(*,*)'CountCov', CountCov
+        END IF
+      END IF
+
       FN = 97
       CALL GetOutputFileName(Time, Iout, FileNameBase)
       write(*,*)FileNameBase
@@ -47,7 +64,7 @@
       XYZ_wFileName = FileNameBase//WrongExt
       SourceFileName = FileNameBase//SourceExt
       GifFileName = FileNameBase//GifExt
-      IF(NCrystal.GT.1)THEN
+      IF((NCrystal.EQ.2).AND.(ANY(ListCrystal.EQ.6)))THEN
         OPEN(FN+6,FILE=XYZ_wFileName(:LEN_TRIM(XYZ_wFileName)))
       END IF
       OPEN(FN+5,FILE=XYZ_vFileName(:LEN_TRIM(XYZ_vFileName)))

@@ -43,6 +43,9 @@
        INTEGER :: NCov  ! number of coverage species
        INTEGER, DIMENSION(NCovMax) :: ListCov ! list of coverage atomic numbers 
 
+       INTEGER, DIMENSION(NCrystalMax) :: CountCrystal, CountCrystalOld ! list of coverage atomic numbers
+       INTEGER, DIMENSION(NCovMax) :: CountCov ! list of coverage atomic numbers
+
        INTEGER, DIMENSION(0:LenX-1,0:LenY-1,0:LenZ) :: LattCoo
        INTEGER, DIMENSION(0:LenX-1,0:LenY-1,0:LenZ) :: LattInd
        

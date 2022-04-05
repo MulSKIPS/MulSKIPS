@@ -35,8 +35,6 @@
       INTEGER :: Index_Event, indsp
       REAL(8) :: Prob, alloyfraction, rr
 
-      INTEGER :: NSibulk=0, NGebulk=0, NSiadatom=0, NGeadatom=0
-
       write(*,*) 'Setting up SiGe alloy with fraction = ', alloyfraction
 !  Filled wall Sites at z=0 (helps with migrating vacancies issue)
       DO z=0,5
@@ -62,10 +60,10 @@
             rr = RAND()
             IF(rr.GT.alloyfraction)THEN
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
-                NSibulk = NSibulk + 1
+                CountCrystal(1) = CountCrystal(1) + 1
             ELSE
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
-                NGebulk = NGebulk + 1
+                CountCrystal(2) = CountCrystal(2) + 1
             END IF
             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
             Bon=4 ! coordination
@@ -85,10 +83,10 @@
             rr = RAND()
             IF(rr.GT.alloyfraction)THEN
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
-                NSibulk = NSibulk + 1
+                CountCrystal(1) = CountCrystal(1) + 1
             ELSE
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
-                NGebulk = NGebulk + 1
+                CountCrystal(2) = CountCrystal(2) + 1
             END IF           
             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
             Bon=4
@@ -124,11 +122,11 @@
             IF(rr.GT.alloyfraction)THEN
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
                 indsp = 0
-                NSiadatom = NSiadatom + 1
+                CountCrystal(1) = CountCrystal(1) + 1
             ELSE
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
                 indsp = 1
-                NGeadatom = NGeadatom + 1
+                CountCrystal(2) = CountCrystal(2) + 1
             END IF            
             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
             Bon=2
@@ -155,11 +153,11 @@
             IF(rr.GT.alloyfraction)THEN
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
                 indsp = 0
-                NSiadatom = NSiadatom + 1
+                CountCrystal(1) = CountCrystal(1) + 1
             ELSE
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
                 indsp = 1
-                NGeadatom = NGeadatom + 1
+                CountCrystal(2) = CountCrystal(2) + 1
             END IF        
             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
             Bon=2
@@ -254,12 +252,6 @@
         END DO
        END DO
       END DO      
-
-      write(*,*)' '
-      write(*,*)'NSibulk, NGebulk, NSiadatom, NGeadatom'
-      write(*,*) NSibulk, NGebulk, NSiadatom, NGeadatom
-      write(*,*)' '
-
 
       END SUBROUTINE SetSiGex
 
