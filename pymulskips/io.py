@@ -71,13 +71,17 @@ def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains,
     Lx = np.abs(xyz[:,0].max() - xyz[:,0].min())
     Ly = np.abs(xyz[:,1].max() - xyz[:,1].min())
     Lz = np.abs(xyz[:,2].max() - xyz[:,2].min())
-    # # KMC superlattice units alat (nm)
+    print('alat in MulSKIPS = {} nm'.format(alat))
+    print('Box size in msh (nm) =', Lx, Ly, Lz)  
+    # KMC superlattice units alat (nm)
     lenx = int(round(Lx/alat))
     leny = int(round(Ly/alat))
     lenz = int(round(Lz/alat)) 
-    print('alat in MulSKIPS = {} nm'.format(alat))
-    print('Box size in msh (nm) =', Lx, Ly, Lz)  
-    print('Box size in MulSKIPS units =', lenx, leny, lenz)
+    print('Box size in MulSKIPS units (using Si alat=0.04525 nm) =', lenx, leny, lenz)
+    lenx -= lenx%24
+    leny -= leny%24
+    print('Box size to be set in MulSKIPS to ensure periodicity =', lenx, leny, lenz)
+    print('      NB: MulSKIPS box strain vector w.r.t. the original mesh: ', (lenx*alat - Lx)/Lx, (leny*alat - Ly)/Ly, (lenz*alat - Lz)/Lz )
 
     xBox0 = xyz[:,0].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges 
     yBox0 = xyz[:,1].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges
@@ -246,13 +250,16 @@ def mulskips2dolfin(coofilename, mpclass, mesh, subdomains, regions,
     Lx = np.abs(xyz[:,0].max() - xyz[:,0].min())
     Ly = np.abs(xyz[:,1].max() - xyz[:,1].min())
     Lz = np.abs(xyz[:,2].max() - xyz[:,2].min())
-    # # KMC superlattice units alat (nm)
+    print('alat in MulSKIPS = {} nm'.format(alat))
+    print('Box size in msh (nm) =', Lx, Ly, Lz)  
+    # KMC superlattice units alat (nm)
     lenx = int(round(Lx/alat))
     leny = int(round(Ly/alat))
     lenz = int(round(Lz/alat)) 
-    print('alat in MulSKIPS = {} nm'.format(alat))
-    print('Box size in msh (nm) =', Lx, Ly, Lz)  
     print('Box size in MulSKIPS units =', lenx, leny, lenz)
+    lenx -= lenx%24
+    leny -= leny%24
+    print('Box size to be set in MulSKIPS to ensure periodicity =', lenx, leny, lenz)
 
     xBox0 = xyz[:,0].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges 
     yBox0 = xyz[:,1].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges
@@ -487,27 +494,16 @@ def mulskips2dolfin(coofilename, mpclass, mesh, subdomains, regions,
 
 
 ### Seems that it works, but can be refined, there must be a better way of writing it...
-def dolfin2msh(in_mshname, out_mshname, mesh, subdomains, boundaries, rescale=None, rotate_angle=None, rotate_axis=None):
-    
-    # # Rescale/rotate mesh if needed
-    # ### WE ASSUME TESTMUNDFAB.MSH IS IN mm !!!! Check it with Remi...or get a smaller one...
-    # if rescale is not None:
-    #     mesh.scale(rescale)
-    # if rotate_angle != None and rotate_axis != None:
-    #     mesh.rotate(rotate_angle, rotate_axis)
-
+def dolfin2msh(in_mshname, out_mshname, mesh, subdomains, boundaries):
 
     # Remember to convert subdomains elements into normal int32 (they are uint64!)
     subarray = subdomains.array().astype(int)
     print(subarray)
-    subarray_unique, subarray_unique_counts = np.unique(subarray, return_counts=True)
-    print(subarray_unique, subarray_unique_counts)
     
     # Read input msh
     M = meshio.read(in_mshname)
 
-
-    ######################
+    # NO NEED TO ROTATE OR RESCALE BECAUSE THE MESH WILL BE READ FROM THE INITIAL ONE!
     def create_mesh(mesh, cell_type, new_cell_data):
         cells = mesh.get_cells_type(cell_type)
         cell_data = mesh.get_cell_data("gmsh:physical", cell_type)
@@ -515,97 +511,21 @@ def dolfin2msh(in_mshname, out_mshname, mesh, subdomains, boundaries, rescale=No
         if new_cell_data.shape != cell_data.shape:
             print('new_cell_data.shape != cell_data.shape.Aborting...')
             sys.exit()
-        out_mesh = meshio.Mesh(points=mesh.points, cells={cell_type: cells}, cell_data={"Data_From_MulSKIPS":[new_cell_data]})
+        out_mesh = meshio.Mesh(points=mesh.points, cells={cell_type: cells}, \
+            cell_data={"Data_From_MulSKIPS":[new_cell_data]})
         return out_mesh
     tetra_mesh = create_mesh(M, "tetra", new_cell_data=subarray)
-    tetra_mesh.write(out_mshname, binary=False)
+    tetra_mesh.write('tmp.msh', binary=False)
 
-    # points = M.points
-    # points = np.vstack([cell.data for cell in M.cells if ])
-    # MM = meshio.Mesh(
-    #     points = points,
-    #     cells = cells,
-    #     point_data = point_data,
-    #     cell_data = cell_data,
-    #     field_data = field_data,
-    #     point_sets = point_sets,
-    #     cell_sets = cell_sets)
-
-    # print('Writing final msh file:', out_mshname)
-    # MM.write(out_mshname, binary=False)
-    ######################
-
-
-    ######################
-    # # Get unique cell indices for tetra type cells
-    # cell_idx = M.get_cell_data("gmsh:physical", "tetra")
-    # print(cell_idx)
-    # cell_idx_unique, cell_idx_unique_counts = np.unique(cell_idx, return_counts=True)
-    # print(cell_idx_unique, cell_idx_unique_counts)
-    
-    # # Get indices which were in M but now are not in subdomains (e.g. because they evaporated...)
-    # # We need to insert an empty list anyways for those indices
-    # mask = np.isin(cell_idx_unique, subarray_unique, invert=True)
-    # cell_idx_unique_counts[mask] = 0
-
-    # # Get tetra cell data
-    # cell_datas = M.cell_data["gmsh:physical"]
-    # print(cell_datas)
-
-    # # Make new list keeping original non-tetra entities and updating tetra entities
-    # new_cell_datas = []
-    # for i, cell_data in enumerate(cell_datas):
-    #     if not cell_data[0] in cell_idx_unique: # if cell is not type = tetra; cell_data has all elements identical
-    #         new_cell_datas.append(cell_data)
-    
-    # # Update tetra entities
-    # for j, jc in zip(cell_idx_unique, cell_idx_unique_counts):
-    #     new_cell_datas.append(np.array([j]*jc))
-    
-    # # Replace all elements in M.cell_data dict
-    # print(new_cell_datas)
-    # M.cell_data["gmsh:physical"] = new_cell_datas
-
-    # print('Writing final msh file:', out_mshname)
-    # M.write(out_mshname, binary=False)
-    ######################
-
-
-    ######################
-    # for i, cell_data in enumerate(cell_datas):
-    #     if cell_data[0] in list(set(cell_idx)):
-    #         mask = (cell_idx == cell_data[0]).nonzero()[0]
-    #         M.cell_data["gmsh:physical"][i] = subdomains.array()[mask]
-    # print('Writing final msh file:', out_mshname)
-    # M.write(out_mshname, binary=False)
-    ######################
-            
-
-
-    # Double check
-    meshio.read(out_mshname)
-
-
-
-
-# >>> M = meshio.read('TestMundfab.msh')
-# >>> points = M.points
-# >>> cells = np.vstack([cell.data for cell in M.cells if cell.type=='tetra'])
-# >>> MM = meshio.Mesh(points=points, cells={'tetra': cells})
-# >>> MM.write('tmp.msh', binary=False)
-# >>> meshio.read('tmp.msh')
-
-
-
-
-
-
-
-
-
-
-
-
+    # Appending ElementData of out_msh to in_msh
+    from collections import deque
+    with open(in_mshname) as fp:
+        data = fp.read()
+    with open('tmp.msh') as fp:
+        data2 = ''.join(list(deque(fp,len(subarray)+10))) # this is like UNIX tail
+    data += data2  
+    with open (out_mshname, 'w') as fp:
+        fp.write(data)
 
 
 

@@ -384,6 +384,7 @@ C            IF (Site(3).GT.MaxZeta) exit
         OPEN(OPF17,FILE=restartfilename,STATUS='REPLACE')
   !16    FORMAT(500000I4) ! ATT ATT ATT format must be > lenX*Leny!!!
         DO k=0,LenZ-1
+          LenSaveOut=0
           DO j=0,LenY-1
             DO i=0,LenX-1
               LenSaveOut(1+i+LenX*j) = LattCoo(i,j,k)
@@ -404,6 +405,7 @@ C            IF (Site(3).GT.MaxZeta) exit
         OPEN(OPF16,FILE=coofilename,STATUS='REPLACE')
   16    FORMAT(500000I4) ! ATT ATT ATT format must be > lenX*Leny!!!
         DO k=0,LenZ-1
+          LenOut=0
           DO j=0,LenY-1
             DO i=0,LenX-1
               IQstat = IBITS(LattCoo(i,j,k),PosIndex,LenIndex)
