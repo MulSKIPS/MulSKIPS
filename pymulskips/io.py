@@ -6,8 +6,6 @@ from subprocess import call
 import meshio
 import cashocs  
 
-# def dolfin2msh(mesh, subdomains, mshname):
-
 def msh2dolfin(mshname, save_h5=True, rescale=None, rotate_angle=None, rotate_axis=None):
 	
 	structurename = mshname[:-4]

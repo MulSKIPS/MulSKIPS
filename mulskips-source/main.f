@@ -346,11 +346,6 @@ C            write(*,*)'Iter',Iter,Ind,Patom,'absorption of',CovInd
            CountCov(Itrans-4) = CountCov(Itrans-4) + 1
        END SELECT
 
-C        IF(MOD(Iter, 1000).EQ.0)THEN
-C          write(*,*)'diff', CountCrystal-CountCrystalOld
-C          CountCrystalOld = CountCrystal
-C        END IF
-
        Iter = Iter +1
 
        SELECT CASE (ExitStrategy)
