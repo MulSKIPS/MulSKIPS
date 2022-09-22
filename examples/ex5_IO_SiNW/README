@@ -14,3 +14,10 @@ Tested only for Python 3.8.10 with the following libraries:
 
 The versions indicated are the only ones tested. 
 Please feel free to try some newest ones and report an issue if something does not work.
+
+Usage:
+- Copy mulskips-source and pymulskips directories in the current directory
+- Then type:
+python3 testIO.SiNW.py
+OR
+nohup python3 -u testIO.SiNW.py > log.out 2>&1 &

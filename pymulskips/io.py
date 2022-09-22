@@ -5,7 +5,7 @@ import os
 from subprocess import call
 import meshio
 import cashocs  
-from pymulskips_sockets.sockets import Driver, InterfaceSocket, Status
+from pymulskips_sockets import Driver, InterfaceSocket, Status
 
 def msh2dolfin(mshname, save_h5=True, rescale=None, rotate_angle=None, rotate_axis=None):
     

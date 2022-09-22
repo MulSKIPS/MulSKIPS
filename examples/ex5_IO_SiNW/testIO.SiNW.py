@@ -2,8 +2,9 @@ from dolfin import *
 from subprocess import call
 import sys, os, time
 import numpy as np
-from pymulskips_sockets import io, setuprun, process, analyze
-import cantera 
+from pymulskips import io, setuprun, process, analyze
+import cantera
+print(f'cantera v{cantera.__version__}')
 import meshio
 print(f'meshio v{meshio.__version__}')
 import cashocs
