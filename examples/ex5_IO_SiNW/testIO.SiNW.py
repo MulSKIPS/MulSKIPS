@@ -72,6 +72,7 @@ Visualize them (e.g. in gmsh) to get the indices of the regions in the msh to be
 subdomains_unique_indices = np.unique(subdomains.array())
 print('User-defined subdomains labels in msh file = ', subdomains_unique_indices)
 # To make this more general and transparent, we define regions as a dictionary below
+# Remember to assign a type to all tetra regions in the MSH (visualize them in SVisual or gmsh)
 regions = { subdomains_unique_indices[0] : 0, # gas
             subdomains_unique_indices[1] : 1} # evolving silicon
 
