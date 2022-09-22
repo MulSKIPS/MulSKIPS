@@ -1,5 +1,7 @@
 ### MulSKIPS
-A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resolution the kinetics of processes (e.g., PVD, CVD, laser annealing) involving elements, alloys and compounds characterized by the sp3 bond symmetry.
+A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resolution the kinetics of processes (e.g., PVD, CVD, laser annealing) involving elements, alloys and compounds characterized by the sp3 bond symmetry
+
+DOCUMENTATION and TUTORIALS on PVD, CVD, LASER ANNEALING processes for various materials (Si, SiC, SiGe, ...) will be uploaded soon, so...STAY TUNED!
 
 <!--
 **MulSKIPS/MulSKIPS** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
