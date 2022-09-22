@@ -56,4 +56,5 @@ $(DESTDIR)/mulskips.e:	$(OBJS)
 	$(FC)  $(FFLAGS) $(OBJS) -o $(DESTDIR)/mulskips.e # $(LIB) 
 #	$(FC)  $(FFLAGS) $(OBJS) -o $(DESTDIR)/code14.e $(LIB) -lm -lc
 #	$(FC)  $(FFLAGS) $(OBJS) -o $(DESTDIR)/code14.e $(LIB) -lm -lc -L/usr/lib/libphpfp.a \
-#	-L/usr/lib/libshpf.a -L/usr/lib/libphpf.a -L/usr/lib/libc.a 
+#	-L/usr/lib/libshpf.a -L/usr/lib/libphpf.a -L/usr/lib/libc.a
+	@echo Compilation terminated

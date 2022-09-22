@@ -21,15 +21,19 @@
 
 This folder contains different tutorials and usage examples of MulSKIPS, in the form of Jupyter notebooks.
 Most examples make use of the pymulskips library, which should be in your $PYTHONPATH.
+Otherwise you can make a copy of pymulskips in the working directory.
+
+It might be useful to make a copy of the mulskips-source directory as well in your working directory.
 
 Here is a list of the examples/tutorials:
 
-1. How to run a MulSKIPS simulation of PVD SiC-3C growth, with Si, SiC2 and Si2C as precursors
-2. How to run a MulSKIPS simulation of CVD Si growth, with H2 and SiH4 as precursors
-3. How to run a MulSKIPS simulation of ultra-fast Si melting
-4. How to run a MulSKIPS simulation of a Si laser annealing process
+ex1. How to run a MulSKIPS simulation of PVD SiC-3C growth, with Si, SiC2 and Si2C as precursors
+ex2. How to run a MulSKIPS simulation of CVD Si growth, with H2 and SiH4 as precursors
+ex3. How to run a MulSKIPS simulation of ultra-fast Si melting
+ex4. How to run a MulSKIPS simulation of a Si laser annealing process
    (This is also based on MulSKIPS IO interface to CAD and FENICS)
-5. How to analyze the results of MulSKIPS 
-6. How to setup a process calibration in MulSKIPS
+ex5. How to run a a MulSKIPS simulation of CVD SiNW growth starting from a MSH file and exporting the final surface atoms
+ex6. How to analyze the results of MulSKIPS 
+ex7. How to setup a process calibration in MulSKIPS
 
 -- work in progress ---

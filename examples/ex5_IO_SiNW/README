@@ -1,0 +1,16 @@
+To run this example you need at least 5 GB free storage,
+to allocate 2 large auxiliary DAT files which can be removed after the run if you want.
+These contain the geometry information needed to import the mesh into MulSKIPS.
+BUT keep them in the folder to avoid repeating the slow (a couple of hours on a good machine) MSH-MulSKIPS interpolation 
+in case you want to repeat only the KMC run, which is mush faster (minutes).
+No MPI is used.
+
+
+Tested only for Python 3.8.10 with the following libraries:
+>>> dolfin (2019.2.0.dev0)
+>>> cantera (2.6.0a4)
+>>> cashocs (1.4.0)
+>>> meshio (5.0.2)
+
+The versions indicated are the only ones tested. 
+Please feel free to try some newest ones and report an issue if something does not work.

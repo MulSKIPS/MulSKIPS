@@ -834,6 +834,8 @@ class PhaseChange(): # when we have Ge and SiGE calibration, rename this as melt
         self.substrate = material
         if temp is not None:
             self.temp = temp
+        if calibration_params is not None:
+            self.calibration_params = calibration_params
 
         # Some constants related to the gas phase
         self.Rgas = 8.314462618       # Gas constant J/mol/K  # 8.314462618*6.242e18 eV/mol/K 
@@ -850,56 +852,86 @@ class PhaseChange(): # when we have Ge and SiGE calibration, rename this as melt
             self.rho = 2329 # kg/m^3
             self.listcry = ['Si']
             self.listcryZ = [14]
-            self.Tm = 1688 # K
+            self.Tm = [1688] # K
             self.KMC_sf = 5.43/12.0   # KMC Super-Lattice parameter (angstrom)
 
-            if calibration_params is None:
-                delta=0.03 #ev
-                ED2=0.96 #eV #from article
+            if calibration_params is None: #values used in npj article #mytag
                 calibration_params = {
-                    # Energy barrier for deposition of solid Si in a site with coor 1, 2 or 3 (PsiL-PsiS in the article...) 
-                    'Ed1': ED2-delta, 'Ed2': ED2, 'Ed3': ED2+delta,  #Ed2 is fixed, vary the others
-                    # Prefactor 
-                    'P0': 1.33e17, #1.56e17
+                    # Energy variation with coordination
+                    'delta': 0.03, # [eV]
+                    # Energy barrier for deposition of solid Si in a site with coor 2
+                    'Ed2': 0.96, # [eV]
+                    # Prefactor
+                    'P0': 1.33e17,
                     # constant in damping exp for depo probs
-                    'A': 280, #settato per error function #350
-                    'Tflex': 1080 # un po' meno della T del flesso 
-                    }
+                    'A': 280,
+                    'Tflex': 1080, # [K]
+                    # Molar fraction of species
+                    'X0':1.0,
+                    'X':1.0
+                }
 
         elif self.substrate == 'Ge':
             self.mass = 0.07263 # [kg/mol]
-            self.rho = 2329 + 3493 * 1- 499 * pow(1, 2)  # kg/m^3
+            self.rho = 5323  # [kg/m^3]
             self.listcry = ['Ge']
             self.listcryZ = [32]
-            self.Tm = 1210  # K ! Change depending on Ge concentration
-            self.KMC_sf = 5.66 / 12.0  # KMC Super-Lattice parameter (angstrom)
-        elif self.substrate == 'SiGe02fake':
-            self.mass = 0.07263*0.2 + 0.0280855*0.8  # [kg/mol]
-            self.rho = 2329+3493*0.2-499*pow(0.2,2)  # kg/m^3
-            self.listcry = ['SiGe02fake']
-            self.listcryZ = [14] #[14*0.8+32*0.2] #deve essere un intero
-            self.Tm = 1210*0.2 + 1688*(1.0-0.2) # K ! Change depending on Ge concentration
-            self.KMC_sf = (5.43*0.8+5.66*0.2)/12.0  # KMC Super-Lattice parameter (angstrom)
-        elif self.substrate == 'SiGe04fake':
-            self.mass = 0.07263*0.4 + 0.0280855*0.6  # [kg/mol]
-            self.rho = 2329+3493*0.4-499*pow(0.4,2)  # kg/m^3
-            self.listcry = ['Si04fake']
-            self.listcryZ = [14] #[14*0.6+32*0.4]
-            self.Tm = 1210*0.4 + 1688*(1-0.4)  # K ! Change depending on Ge concentration
-            self.KMC_sf = (5.43*0.6+5.66*0.4)/ 12.0  # KMC Super-Lattice parameter (angstrom)
+            self.Tm = [1210]  # [K] #modified as list #mytag
+            self.KMC_sf = 5.66/12.0  # KMC Super-Lattice parameter (angstrom)
+
+            if calibration_params is None: #calibration to be confirmed!!!!!!!!!!!!!!!!!!!!!!!!! #mytag
+                calibration_params = {
+                    # Energy variation with coordination
+                    'delta': 0.03*0.65, # [eV]
+                    # Energy barrier for deposition of solid Si in a site with coor 2
+                    'Ed2': 0.65, # [eV]
+                    # Prefactor
+                    'P0': 2.596e16,
+                    # constant in damping exp for depo probs
+                    'A': 210,
+                    'Tflex': 900, # [K]
+                    # Molar fraction of species
+                    'X0':1.0,
+                    'X':1.0
+                }
+        elif self.substrate == 'SiGe_X':  # interpolations strictly valid for X in [0.0,0.4] and X=1
+            self.mass = 0.07263 * self.calibration_params['X0'][1] + 0.0280855 * (1.0 - self.calibration_params['X0'][1])  # [kg/mol]
+            self.rho = 2329 + 3493 * self.calibration_params['X0'][1] - 499 * pow(self.calibration_params['X0'][1],2)  # [kg/m^3]
+            self.listcry = ['Si','Ge']
+            self.listcryZ = [14, 32]
+            self.Tm = [1688, 1210]
+            #self.Tm = 1210 * self.calibration_params['X'][1] + 1688 * (1.0 - self.calibration_params['X'][1])  # K
+            #self.KMC_sf = (5.43 * (1.0 - self.calibration_params['X'][1]) + 5.66 * self.calibration_params['X'][1]) / 12.0  # KMC Super-Lattice parameter (angstrom)
+            self.KMC_sf = 5.43/12.0  # KMC Super-Lattice parameter (angstrom)
+            # NB: KMC_sf for strained SiGe is similar to Si...we need it to be fixed to Si anyways for LA where X is variable! 
+            # Then for melt depth we can use a weighted average depending on x (in turn evaluated as a func. of xyz at the end of the process) 
+
         else:
             print('ERROR: Substrate {} is not implemented'.format(self.substrate))
             sys.exit()
+
         a0 = pow(8*self.mass/self.NA/self.rho,1.0/3.0) # [m] lattice parameter for crystalline Si (diamond structure, 8 atoms per cell)
+        print('lattice parameter for substrate:', a0)
         self.rho_surf = self.rho * a0 # Kg/m^2
                 
         # Check
-        calibration_params_keys = ['Ed1', 'Ed2', 'Ed3', 'P0', 'A', 'Tflex']
+        calibration_params_keys = ['Ed2', 'delta', 'P0', 'A', 'Tflex', 'X', 'X0'] #mytag_2903
         for key, value in calibration_params.items():
             if key not in calibration_params_keys:
+                # print('  ERROR: please provide calibration parameter {} '.format(key))
+                # sys.exit()
+                print('  WARNING: unknown calibration parameter {} will not be taken into account'.format(key))
+        for key in calibration_params_keys:
+            if key not in calibration_params:
                 print('  ERROR: please provide calibration parameter {} '.format(key))
                 sys.exit()
-        self.calibration_params = calibration_params
+
+        # calibration_params_keys = ['Ed1', 'Ed2', 'Ed3', 'P0', 'A', 'Tflex']
+        # for key, value in calibration_params.items():
+        #     if key not in calibration_params_keys:
+        #         print('  ERROR: please provide calibration parameter {} '.format(key))
+        #         sys.exit()
+        # self.calibration_params = calibration_params
 
         print('*** Initializing melting/solidification process for {} '.format(self.substrate))
         print('mass \t\t\t--> Substrate Mass [Kg/mol]:', self.mass)
@@ -956,30 +988,43 @@ class PhaseChange(): # when we have Ge and SiGE calibration, rename this as melt
             # Energetics for evaporation without coverage neighbours
             dims0 = np.ones(ncry, dtype=int)*4
             E0 = np.zeros((ncry,*dims0))
-            E0[0,1] = 1*self.calibration_params['Ed2'] # 1coor, no coverage
-            E0[0,2] = 2*self.calibration_params['Ed2'] # 2coor, no coverage 
-            E0[0,3] = 3*self.calibration_params['Ed2'] # 3coor, no coverage
+            E0[0,1] = 1*self.calibration_params['Ed2'][0] # 1coor, no coverage
+            E0[0,2] = 2*self.calibration_params['Ed2'][0] # 2coor, no coverage
+            E0[0,3] = 3*self.calibration_params['Ed2'][0] # 3coor, no coverage
         elif self.substrate == 'Ge':
             # Energetics for evaporation without coverage neighbours
             dims0 = np.ones(ncry, dtype=int) * 4
             E0 = np.zeros((ncry, *dims0))
-            E0[0,1] = 1 * self.calibration_params['Ed2']  # 1coor, no coverage
-            E0[0,2] = 2 * self.calibration_params['Ed2']  # 2coor, no coverage
-            E0[0,3] = 3 * self.calibration_params['Ed2']  # 3coor, no coverage
-        elif self.substrate == 'SiGe02fake':
+            E0[0,1] = 1 * self.calibration_params['Ed2'][0]  # 1coor, no coverage
+            E0[0,2] = 2 * self.calibration_params['Ed2'][0] # 2coor, no coverage
+            E0[0,3] = 3 * self.calibration_params['Ed2'][0]  # 3coor, no coverage
+        elif self.substrate == 'SiGe_X':  # ncry=2 behaving like Si(1-x)+Ge(x)
             # Energetics for evaporation without coverage neighbours
+            # da modificare in funzione di self.calibration_params['X']
             dims0 = np.ones(ncry, dtype=int) * 4
             E0 = np.zeros((ncry, *dims0))
-            E0[0, 1] = 1 * self.calibration_params['Ed2']  # 1coor, no coverage
-            E0[0, 2] = 2 * self.calibration_params['Ed2']  # 2coor, no coverage
-            E0[0, 3] = 3 * self.calibration_params['Ed2']  # 3coor, no coverage
-        elif self.substrate == 'SiGe04fake':
-            # Energetics for evaporation without coverage neighbours
-            dims0 = np.ones(ncry, dtype=int) * 4
-            E0 = np.zeros((ncry, *dims0))
-            E0[0,1] = 1 * self.calibration_params['Ed2']  # 1coor, no coverage
-            E0[0,2] = 2 * self.calibration_params['Ed2']  # 2coor, no coverage
-            E0[0,3] = 3 * self.calibration_params['Ed2']  # 3coor, no coverage
+            alpha = 0.063 #0.06 #0.07 calib2 #0.06 new calib
+            beta = 0.085 #0.08  #0.2 calib2 #0.08 new calib
+            # ---------------------------------------------------------------------------------------------------------------
+            Ed2 = self.calibration_params['Ed2']
+            E0[0, 1, 0] = 1 * Ed2[0]                                    # Si, 1Si NN, no coverage 
+            E0[0, 0, 1] = (1-alpha) * 1 * (Ed2[0] + Ed2[1]) / 2         # Si, 1Ge NN, no coverage
+            E0[0, 1, 1] = (1-alpha) * 2 * (3 * Ed2[0] + Ed2[1]) / 4     # Si, 1Si 1Ge NN, no coverage
+            E0[0, 2, 0] = 2 * Ed2[0]                                    # Si, 2Si NN, no coverage 
+            E0[0, 0, 2] = (1-alpha) * 2 * (Ed2[0] + Ed2[1]) / 2         # Si, 2Ge NN, no coverage 
+            E0[0, 2, 1] = (1-alpha) * 3 * (5 * Ed2[0] + Ed2[1]) / 6     # Si, 2Si 1Ge NN, no coverage
+            E0[0, 1, 2] = (1-alpha) * 3 * (2 * Ed2[0] + Ed2[1]) / 3     # Si, 1Si 2Ge NN, no coverage
+            E0[0, 3, 0] = 3 * Ed2[0]                                    # Si, 3Si NN, no coverage 
+            E0[0, 0, 3] = (1-alpha) * 3 * (Ed2[0] + Ed2[1]) / 2         # Si, 3Ge NN, no coverage
+            E0[1, 1, 0] = (1+2*beta) * 1 * (Ed2[1] + Ed2[0]) / 2          # Ge, 1Si NN, no coverage
+            E0[1, 0, 1] = 1 * Ed2[1]                                    # Ge, 1Ge NN, no coverage 
+            E0[1, 1, 1] = (1+beta) * 2 * (3 * Ed2[1] + Ed2[0]) / 4      # Ge, 1Si 1Ge NN, no coverage 
+            E0[1, 2, 0] = (1+2.5*beta) * 2 * (Ed2[1] + Ed2[0]) / 2          # Ge, 2Si NN, no coverage
+            E0[1, 0, 2] = 2 * Ed2[1]                                    # Ge, 2Ge NN, no coverage 
+            E0[1, 2, 1] = (1+beta) * 3 * (2 * Ed2[1] + Ed2[0]) / 3      # Ge, 2Si 1Ge NN, no coverage
+            E0[1, 1, 2] = (1+beta) * 3 * (5 * Ed2[1] + Ed2[0]) / 6      # Ge, 1Si 2Ge NN, no coverage
+            E0[1, 3, 0] = (1+4*beta) * 3 * (Ed2[1] + Ed2[0]) / 2          # Ge, 3Si NN, no coverage
+            E0[1, 0, 3] = 3 * Ed2[1]                                    # Ge, 3Ge NN, no coverage 
         else:
             print('ERROR: Substrate {} is not implemented'.format(self.substrate))
             sys.exit()
@@ -987,19 +1032,30 @@ class PhaseChange(): # when we have Ge and SiGE calibration, rename this as melt
         for i in range(ncry):
             Etot[i] = E0[i]
 
+        print('\nEvaporation energetics:\n {}'.format(Etot))
+
         return Etot
 
     def get_PtransE(self):
         
         # Energetics for deposition
         ene = self.get_energetics_evap()
-        print('\nEvaporation energetics:\n {}'.format(ene))
+        #print('\nEvaporation energetics:\n {}'.format(ene))
 
-        # Prefactor
-        P0 = self.calibration_params['P0']
-        
+        # Prefactor #mytag
+        #P0 = self.calibration_params['P0']
+        #PtransE = P0 * np.exp(-ene/(self.kb_ev*self.temp))
+
+        ncry, ncov = len(self.listcry), len(self.listcov)
+        dims = self.get_dims()
+        P0 = np.zeros((ncry, *dims))
+        #P0 = np.zeros((len(self.listcry), 4, 1)) #mytag (si dovrebbe poter cancellare!!!!!!!)
+
+        for i, j in enumerate(self.listcry):
+            P0[i] = self.calibration_params['P0'][i]
+
         # Calculate Frequencies
-        PtransE = P0 * np.exp(-ene/(self.kb_ev*self.temp))
+        PtransE = np.multiply(P0, np.exp(-ene / (self.kb_ev * self.temp)))
         print('\nEvaporation probability:\n {}'.format(PtransE))
 
         return PtransE
@@ -1011,53 +1067,62 @@ class PhaseChange(): # when we have Ge and SiGE calibration, rename this as melt
         
         E0=np.zeros((ncry,3)) 
         if self.substrate == 'Si':
-            E0[0,0]= 2*self.calibration_params['Ed1'] # coor 1 
-            E0[0,1]= 2*self.calibration_params['Ed2'] # coor 2
-            E0[0,2]= 2*self.calibration_params['Ed3'] # coor 3 
+            E0[0,0] = 2 * (self.calibration_params['Ed2'][0] - self.calibration_params['delta'][0])  # coor 1
+            E0[0,1] = 2 * self.calibration_params['Ed2'][0]  # coor 2
+            E0[0,2] = 2 * (self.calibration_params['Ed2'][0] + self.calibration_params['delta'][0])  # coor 3
         elif self.substrate == 'Ge':
-            E0[0,0] = 2 * self.calibration_params['Ed1']  # coor 1
-            E0[0,1] = 2 * self.calibration_params['Ed2']  # coor 2
-            E0[0,2] = 2 * self.calibration_params['Ed3']  # coor 3
-        elif self.substrate == 'SiGe02fake':
-            E0[0,0]= 2*self.calibration_params['Ed1'] # coor 1
-            E0[0,1]= 2*self.calibration_params['Ed2'] # coor 2
-            E0[0,2]= 2*self.calibration_params['Ed3'] # coor 3
-        elif self.substrate == 'SiGe04fake':
-            E0[0,0]= 2*self.calibration_params['Ed1'] # coor 1
-            E0[0,1]= 2*self.calibration_params['Ed2'] # coor 2
-            E0[0,2]= 2*self.calibration_params['Ed3'] # coor 3
+            E0[0,0] = 2 * (self.calibration_params['Ed2'][0] - self.calibration_params['delta'][0])  # coor 1
+            E0[0,1] = 2 * self.calibration_params['Ed2'][0]  # coor 2
+            E0[0,2] = 2 * (self.calibration_params['Ed2'][0] + self.calibration_params['delta'][0])  # coor 3
+        elif self.substrate == 'SiGe_X': # ncry=2
+            Ed2 = self.calibration_params['Ed2']
+            delta = self.calibration_params['delta']
+            E0[0,0] = 2 * (Ed2[0] - delta[0])     # Si coor 1
+            E0[0,1] = 2 * Ed2[0]                  # Si coor 2
+            E0[0,2] = 2 * (Ed2[0] + delta[0])     # Si coor 3
+            E0[1,0] = 2 * (Ed2[1] - delta[1])     # Ge coor 1
+            E0[1,1] = 2 * Ed2[1]                  # Ge coor 2
+            E0[1,2] = 2 * (Ed2[1] + delta[1])     # Ge coor 3 
         else:
             print('ERROR: Substrate {} is not implemented'.format(self.substrate))
             sys.exit()
             
-        # Set E0 in Etot 
+        # Set E0 in Etot
         for i in range(ncry):
             Etot[i] = E0[i]
+
+        print('\nDeposition energetics:\n {}'.format(Etot))
         
         return Etot
 
-    def dampingf(self, temp):
-        A = self.calibration_params['A']
-        Tflex = self.calibration_params['Tflex']
-        fact = (1 + math.erf((temp - Tflex) / A)) * 0.5  #error function (riscalabile con Tflex e A)
-        print('\nDampingfactor:\n {}'.format(fact))
+
+    def dampingf(self, temp): #mytag
+        A = np.zeros(len(self.listcry))
+        Tflex = np.zeros(len(self.listcry))
+        fact = np.zeros((len(self.listcry), 3))
+        for i, Z in enumerate(self.listcry):
+            A[i] = self.calibration_params['A'][i]
+            Tflex[i] = self.calibration_params['Tflex'][i]
+            fact[i] = (1 + math.erf((temp - Tflex[i]) / A[i])) * 0.5  # error function (riscalabile con Tflex e A)
         return fact
 
-    def get_PtransD(self):
+    def get_PtransD(self): #mytag
         
         # Energetics for deposition
         ene = self.get_energetics_depo()
-        print('\nDeposition energetics:\n {}'.format(ene))
+        #print('\nDeposition energetics:\n {}'.format(ene))
 
         # Prefactor
-        P0 = self.calibration_params['P0']
-        
-        # Calculate Frequencies
-        PtransD = P0 * np.exp(-ene/(self.kb_ev*self.Tm)) * self.dampingf(self.temp) #0.5 is not needed here!!!!!
-        print('\nDeposition probability:\n {}'.format(PtransD))
+        P0 = np.zeros((len(self.listcry), 1))
+        Tm = np.zeros((len(self.listcry), 1))
+        for i, Z in enumerate(self.listcry):
+            P0[i] = self.calibration_params['P0'][i] * self.calibration_params['X'][i]
+            Tm[i] = self.Tm[i]
+            # Calculate Frequencies
+            PtransD = P0 * np.exp(-ene / (self.kb_ev * Tm)) * self.dampingf(self.temp)
+            print('\ni:',i)
+            print('Tm(i):', Tm[i])
+            print('P0(i):', P0[i])
+            print('Dampingfactor(i):', self.dampingf(self.temp)[i])
 
         return PtransD
-
-
-
-

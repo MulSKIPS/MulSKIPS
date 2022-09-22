@@ -5,63 +5,49 @@ import os
 from subprocess import call
 import meshio
 import cashocs  
+from pymulskips_sockets.sockets import Driver, InterfaceSocket, Status
 
 def msh2dolfin(mshname, save_h5=True, rescale=None, rotate_angle=None, rotate_axis=None):
-	
-	structurename = mshname[:-4]
+    
+    structurename = mshname[:-4]
 
-	# Print this to check what's inside msh
-	print('\nINFO msh file:\n', meshio.read(f"{structurename}.msh")) 
+    # Print this to check what's inside msh
+    print('\nINFO msh file:\n', meshio.read(f"{structurename}.msh")) 
 
-	# Remove existing xdmf files
-	try:
-	    os.remove(f"{structurename}_boundaries.xdmf")
-	except OSError:
-	    pass
-	try:
-	    os.remove(f"{structurename}_subdomains.xdmf")
-	except OSError:
-	    pass
-	# Convert msh to xdmf and h5. This will produce 3+3 files (or 2+2 if there are no boundaries)
-	call([f"cashocs-convert {structurename}.msh {structurename}.xdmf"], shell=True)
+    # Remove existing xdmf files
+    try:
+        os.remove(f"{structurename}_boundaries.xdmf")
+    except OSError:
+        pass
+    try:
+        os.remove(f"{structurename}_subdomains.xdmf")
+    except OSError:
+        pass
+    # Convert msh to xdmf and h5. This will produce 3+3 files (or 2+2 if there are no boundaries)
+    call([f"cashocs-convert {structurename}.msh {structurename}.xdmf"], shell=True)
 
-	# Import xdmf and h5 to FEniCS
-	mesh, subdomains, boundaries, dx, ds, dS = cashocs.import_mesh(f'{structurename}.xdmf')
+    # Import xdmf and h5 to FEniCS
+    mesh, subdomains, boundaries, dx, ds, dS = cashocs.import_mesh(f'{structurename}.xdmf')
 
-	# Rescale/rotate mesh if needed
-	### WE ASSUME TESTMUNDFAB.MSH IS IN mm !!!! Check it with Remi...or get a smaller one...
-	if rescale is not None:
-	    mesh.scale(rescale)
-	if rotate_angle != None and rotate_axis != None:
-	    mesh.rotate(rotate_angle, rotate_axis)
-	    
-	# Read mesh
-	if save_h5:
-		hdf = HDF5File(mesh.mpi_comm(), f"{structurename}_all.h5", "w")
-		hdf.write(mesh, "/mesh")
-		hdf.write(subdomains, "/subdomains")
-		hdf.write(boundaries, "/boundaries")
-		hdf.close()
+    # Rescale/rotate mesh if needed
+    ### WE ASSUME TESTMUNDFAB.MSH IS IN mm !!!! Check it with Remi...or get a smaller one...
+    if rescale is not None:
+        mesh.scale(rescale)
+    if rotate_angle != None and rotate_axis != None:
+        mesh.rotate(rotate_angle, rotate_axis)
+        
+    # Read mesh
+    if save_h5:
+        hdf = HDF5File(mesh.mpi_comm(), f"{structurename}_all.h5", "w")
+        hdf.write(mesh, "/mesh")
+        hdf.write(subdomains, "/subdomains")
+        hdf.write(boundaries, "/boundaries")
+        hdf.close()
 
-	return mesh, subdomains, boundaries, dx, ds, dS
+    return mesh, subdomains, boundaries, dx, ds, dS
 
 
-def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains, 
-    regionsfilename='KMCregions', return_maps=True, savemaps=False):
-
-    comm = MPI.comm_world
-    if(MPI.rank(comm)==0):
-        print('\nStarted dolfin2mulskips...')
-        t0 = time.time()
-    MPI.barrier(comm)
-
-    # Check regions
-    print('Setting the following regions in MulSKIPS:')
-    for reg in regions.items():
-        print(f'Subdomain {reg[0]} in mesh \t --> Region of type {reg[1]} in MulSKIPS')
-
-    # KMC lattice parameter in nm
-    alat = mpclass.KMC_sf * 1e-1
+def get_boxsize_from_mesh(mesh, alat):
 
     # Box for MulSKIPS should be determined directly from the mesh size
     # Mulskips should then be compiled accordingly
@@ -76,10 +62,33 @@ def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains,
     leny = int(round(Ly/alat))
     lenz = int(round(Lz/alat)) 
     print('Box size in MulSKIPS units (using Si alat=0.04525 nm) =', lenx, leny, lenz)
-    lenx -= lenx%24
-    leny -= leny%24
+    lenx -= lenx%12
+    leny -= leny%12
     print('Box size to be set in MulSKIPS to ensure periodicity =', lenx, leny, lenz)
     print('      NB: MulSKIPS box strain vector w.r.t. the original mesh: ', (lenx*alat - Lx)/Lx, (leny*alat - Ly)/Ly, (lenz*alat - Lz)/Lz )
+
+    return lenx, leny, lenz
+
+
+def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains, 
+    regionsfilename='KMCregions', return_maps=True, savemaps=False, return_box_size=False):
+
+    comm = MPI.comm_world
+    if(MPI.rank(comm)==0):
+        print('\nStarted dolfin2mulskips...')
+        t0 = time.time()
+    MPI.barrier(comm)
+
+    # Check regions
+    print('Setting the following regions in MulSKIPS:')
+    for reg in regions.items():
+        print(f'Subdomain {reg[0]} in mesh \t --> Region of type {reg[1]} in MulSKIPS')
+
+    # KMC lattice parameter in nm
+    alat = mpclass.KMC_sf * 1e-1
+    lenx, leny, lenz = get_boxsize_from_mesh(mesh, alat)
+
+    xyz = mesh.coordinates() # nm
 
     xBox0 = xyz[:,0].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges 
     yBox0 = xyz[:,1].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges
@@ -220,8 +229,13 @@ def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains,
         print('DONE Saving maps files. ETA: {} sec'.format(time.time()-t0))
     MPI.barrier(comm)
 
-    if return_maps:
-        return cell_map, rank_map, LattFunc_array
+    if return_maps and return_box_size:
+        return cell_map, rank_map, LattFunc_array, lenx, leny, lenz
+    else:
+        if return_maps:
+            return cell_map, rank_map, LattFunc_array
+        if return_box_size:
+            return lenx, leny, lenz
 
 
 def mulskips2dolfin(coofilename, mpclass, mesh, subdomains, regions,
@@ -370,19 +384,20 @@ def mulskips2dolfin(coofilename, mpclass, mesh, subdomains, regions,
     else:
         Ph_tmp_array[wall_map > 5] = 1.   # now walls are also =1, and only liquid is =0
     nliquid = len((Ph_tmp_array == 0).nonzero()[0])
+    nPh = len(Ph_tmp_array)
 
     # Print out info
-    nPh = len(Ph_tmp_array)
-    print('Process {}: Total: {}'.format(MPI.rank(comm), nPh))
-    MPI.barrier(comm)
-    print('Process {}: Crystal sites: {}'.format(MPI.rank(comm), nsolid))
-    MPI.barrier(comm)
-    print('Process {}: Air / Liquid sites: {}'.format(MPI.rank(comm), nliquid))
-    MPI.barrier(comm)
-    print('Process {}: Non-evolving sites: {}'.format(MPI.rank(comm), nPh-nsolid-nliquid))
+    if MPI.size(comm) > 1:
+        print('Process {}: Total: {}'.format(MPI.rank(comm), nPh))
+        MPI.barrier(comm)
+        print('Process {}: Crystal sites: {}'.format(MPI.rank(comm), nsolid))
+        MPI.barrier(comm)
+        print('Process {}: Air / Liquid sites: {}'.format(MPI.rank(comm), nliquid))
+        MPI.barrier(comm)
+        print('Process {}: Non-evolving sites: {}'.format(MPI.rank(comm), nPh-nsolid-nliquid))
+        MPI.barrier(comm)
 
     # Sum over processors
-    MPI.barrier(comm)
     n_tot = int(MPI.sum(comm, nPh))
     nsolid_tot = int(MPI.sum(comm, nsolid))
     nliquid_tot = int(MPI.sum(comm, nliquid))
@@ -538,10 +553,29 @@ def dolfin2msh(in_mshname, out_mshname, mesh, subdomains, boundaries):
 
 
 
+
+
+
+
+
 # ---------------------- LA routines -------------------------
 
-def write_geom_for_mulskips(cadfilename, regions, mesh, V, dofmap, mv, comm,
-    alat, xBox0, yBox0, zBox0, lenx, leny, lenz, savemaps=False):
+def do_something(A):
+    print('Doing something to array...')
+    time.sleep(5)
+    return A+20
+
+
+def send_geom_to_mulskips(regions, mesh, V, dofmap, mv, comm,
+    alat, xBox0, yBox0, zBox0, lenx, leny, lenz, savemaps=False, 
+    driver=None, cadfilename=None):
+
+    if driver==None and cadfilename==None: 
+        print('ERROR: please set \'cadfilename\' or \'driver\' flag')
+        sys.exit()
+    elif driver!=None and cadfilename!=None: 
+        print('ERROR: please set \'cadfilename\' or \'driver\' flag')
+        sys.exit()
 
     if(MPI.rank(comm)==0):
         print('Setting up geometry for mulskips...')
@@ -555,11 +589,12 @@ def write_geom_for_mulskips(cadfilename, regions, mesh, V, dofmap, mv, comm,
     # Write to file to check that regions are correctly set up 
     my_first, my_last = dofmap.ownership_range() # global
     LattFunc = Function(V)
-    LattFunc.assign(Constant(0))
+#    LattFunc.assign(Constant(0))   # setup air everywhere by default
+    LattFunc.assign(Constant(20))   # setup air everywhere by default
     LattFunc_array = LattFunc.vector().get_local()
     for cell in cells(mesh):
         ind_cur = mv[cell]
-        if(regions[ind_cur] == 10):
+        if(regions[ind_cur] == 10):    # if wall
           dofs_cell = dofmap.cell_dofs(cell.index())  # local
           for dof in dofs_cell :
               global_dof = dofmap.local_to_global_index(dof)  # global
@@ -567,7 +602,7 @@ def write_geom_for_mulskips(cadfilename, regions, mesh, V, dofmap, mv, comm,
                  LattFunc_array[dof]=10
     for cell in cells(mesh):
         ind_cur = mv[cell]
-        if(regions[ind_cur] == 1):
+        if(regions[ind_cur] == 1):     # if solid
           dofs_cell = dofmap.cell_dofs(cell.index())  # local
           for dof in dofs_cell :
               global_dof = dofmap.local_to_global_index(dof)  # global
@@ -614,7 +649,6 @@ def write_geom_for_mulskips(cadfilename, regions, mesh, V, dofmap, mv, comm,
 
     # the lines above are slightly faster but give a slightly different LattGeo.dat 
     iz = 0
-    # LattFunc.set_allow_extrapolation(True)
     if(MPI.rank(comm)==0): t1 = time.time()
     while iz < lenz :
       iy = 0
@@ -634,7 +668,6 @@ def write_geom_for_mulskips(cadfilename, regions, mesh, V, dofmap, mv, comm,
             rank_map[iz][j] = MPI.rank(comm)
           MPI.barrier(comm)
           val = int(MPI.max(comm, val))
-    #      val = LattFunc(point_latt)
           lattcell_map[iz][j] = val
           ix+=1
         iy+=1
@@ -645,24 +678,82 @@ def write_geom_for_mulskips(cadfilename, regions, mesh, V, dofmap, mv, comm,
     if(MPI.rank(comm)==0): print('DONE Setting up geometry for mulskips. ETA: {} sec'.format(time.time()-t0))
     MPI.barrier(comm)
 
-    # Write LattGeo.dat input for MulSKIPs
-    if(MPI.rank(comm)==0):
-        print('Writing geometry to {}...'.format(cadfilename))
-        t0 = time.time()
-        fileout=open(cadfilename,"w")
-        lines=0
-        col=lenz-1
-        while col >= 0:
-            while lines < leny*lenx:
-                fileout.write("%s " % str(lattcell_map[col][lines]))
-                lines+=1
-            fileout.write("\n")
-            col-=1
-            lines=0
-        fileout.close()
-        print('DONE Writing geometry to {}. ETA: {} sec'.format(cadfilename, time.time()-t0))
-    MPI.barrier(comm)
+    
+    if driver != None:
+        # Send lattcell_map array to MulSKIPS via socket
+        A = lattcell_map.astype(np.int32) # np.int32 is fundamental!  
+        A = A[::-1, ...]   # remember to reverse order along z before passing it to mulskips! Fenics is upside down
 
+
+        # ##############################
+        # fileout=open('tmp1',"w")
+        # lines=0
+        # col=0
+        # while col < lenz:
+        #     while lines < leny*lenx:
+        #         fileout.write("%s " % str(A[col][lines]))
+        #         lines+=1
+        #     fileout.write("\n")
+        #     col+=1
+        #     lines=0
+        # fileout.close()
+        # sys.exit()
+        # ##############################
+    
+
+
+        # Send modified array to mulskips 
+        stat = driver.get_status()
+        if stat == Status.Up | Status.Ready:
+            print('Sending geometry to MulSKIPS...')
+            driver.send_data(A, dtype='GEO') # lattcell_map 
+            print('Data sent (shape: {}): \n {}'.format(A.shape, A)) 
+
+        # # Get array from mulskips to double check
+        # stat = driver.get_status()
+        # if stat == Status.Up | Status.HasData:
+        #     A = driver.get_data(A, dtype='GEO')
+        #     print('Data received (shape: {}): \n {}'.format(A.shape, A))
+        #     A = do_something(A)
+
+
+        # A = np.zeros((4,2), np.float32)  # needed even if array is already allocated in fortran
+        # for i in range(3):
+        #     stat = driver.get_status()
+        #     print(stat)
+        #     if stat == Status.Up | Status.HasData:
+        #         A = driver.get_data(A)
+        #         print('Data received: \n {}'.format(A))
+        #         A = do_something(A)
+        #     elif stat == Status.Up | Status.Ready:
+        #         driver.send_data(A)
+        #         # driver.send_data(lattcell_map) # remember to send it in reverse z order
+        #         print('Data sent: \n {}'.format(A))
+
+
+
+
+    
+    else: # communication via disk 
+        # Send lattcell_map array to MulSKIPS by writing it to disk
+        if(MPI.rank(comm)==0):
+            print('Writing geometry to {}...'.format(cadfilename))
+            t0 = time.time()
+            fileout=open(cadfilename,"w")
+            lines=0
+            col=lenz-1
+            while col >= 0:
+                while lines < leny*lenx:
+                    fileout.write("%s " % str(lattcell_map[col][lines]))
+                    lines+=1
+                fileout.write("\n")
+                col-=1
+                lines=0
+            fileout.close()
+            print('DONE Writing geometry to {}. ETA: {} sec'.format(cadfilename, time.time()-t0))
+        MPI.barrier(comm)
+
+    # could be useful for double checks...
     if savemaps:
         print('Saving cell_map, rank_map and wall_map to file for restart...'); t0 = time.time()
         np.savetxt('cell_map_{}.dat'.format(MPI.rank(comm)), cell_map, fmt='%d')
@@ -671,16 +762,29 @@ def write_geom_for_mulskips(cadfilename, regions, mesh, V, dofmap, mv, comm,
         print('DONE Saving maps files. ETA: {} sec'.format(time.time()-t0))
     MPI.barrier(comm)
 
-    return cell_map, rank_map, LattFunc_array
+
+    # Conta numero di solidi iniziale
+    # Nsolid_KMC_0 = int(round((lattcell_map == 1).sum() / 27))
+
+    return cell_map, rank_map, LattFunc_array #, Nsolid_KMC_0
 
 
-def write_T_for_mulskips(tempfilename, tstep, T_curr, 
+
+def send_T_for_mulskips(tstep, T_curr, 
     cell_map, rank_map, mesh, V, dofmap, coord_mesh, dofs, comm,
-    alat, xBox0, yBox0, zBox0, lenx, leny, lenz):
+    alat, xBox0, yBox0, zBox0, lenx, leny, lenz, 
+    tempfilename=None, driver=None):
 
     # Map temperature on MulSKIPS superlattice
     if(MPI.rank(comm)==0): print('Mapping temperature on MulSKIPs superlattice...')
     MPI.barrier(comm)
+
+    if driver==None and tempfilename==None: 
+        print('ERROR: please set \'tempfilename\' or \'driver\' flag')
+        sys.exit()
+    elif driver!=None and tempfilename!=None: 
+        print('ERROR: please set \'tempfilename\' or \'driver\' flag')
+        sys.exit()
 
     # Average T within every cell in the mesh 
     t0 = time.time()
@@ -779,21 +883,41 @@ def write_T_for_mulskips(tempfilename, tstep, T_curr,
     # print('Are methods 1 and 2 equal?', np.array_equal(value_latt, value_latt_2))
     # print('Are methods 1 and 3 equal?', np.array_equal(value_latt, value_latt_3))
     
-    # Write to file
+
     if(MPI.rank(comm)==0):
-        print('Writing temperature map to {}...'.format(tempfilename))
-        t0 = time.time()
-        fileout=open(tempfilename,"w")
-        lines, col = 0, lenz-1
-        while col >= 0:
-            while lines < leny*lenx:
-                fileout.write("%s " % str(int(round(value_latt[col][lines]))))
-                lines+=1
-            fileout.write("\n")
-            col-=1
-            lines=0
-        fileout.close()
-        print('DONE Writing temperature to {}. ETA: {} sec'.format(tempfilename, time.time()-t0))
+        if driver != None:
+            # Send temperature map to MulSKIPS via socket                
+            B = value_latt.round().astype(np.int32) # np.int32 is fundamental!  
+            B = B[::-1, ...]   # remember to reverse order along z before passing it to mulskips! Fenics is upside down
+
+            # Send modified array to mulskips 
+            stat = driver.get_status()
+            if stat == Status.Up | Status.Ready:
+                print('Sending field to MulSKIPS...')
+                driver.send_data(B, dtype='FIELD') # lattcell_map 
+                print('Data sent (shape: {}): \n {}'.format(B.shape, B)) 
+
+            # # Get array from mulskips to double check
+            # stat = driver.get_status()
+            # if stat == Status.Up | Status.HasData:
+            #     B = driver.get_data(B, dtype='FIELD')
+            #     print('Data received (shape: {}): \n {}'.format(B.shape, B))
+            #     B = do_something(B)
+        else:
+            # Write to file
+            print('Writing temperature map to {}...'.format(tempfilename))
+            t0 = time.time()
+            fileout=open(tempfilename,"w")
+            lines, col = 0, lenz-1
+            while col >= 0:
+                while lines < leny*lenx:
+                    fileout.write("%s " % str(int(round(value_latt[col][lines]))))
+                    lines+=1
+                fileout.write("\n")
+                col-=1
+                lines=0
+            fileout.close()
+            print('DONE Writing temperature to {}. ETA: {} sec'.format(tempfilename, time.time()-t0))
     MPI.barrier(comm)
 
     # ################  Debugging  ##########################    # NOT WORKING WHEN KMC IS ON A SUBBOX
@@ -829,21 +953,40 @@ def write_T_for_mulskips(tempfilename, tstep, T_curr,
     return
 
 
-def read_phases_from_mulskips(coofilename, rundirname, tstep, 
+def get_phases_from_mulskips(rundirname, tstep, 
     cell_map, rank_map, wall_map, V, dofmap, comm,
-    alat, xBox0, yBox0, zBox0, lenx, leny, lenz):
+    alat, xBox0, yBox0, zBox0, lenx, leny, lenz,
+    coofilename=None, driver=None):
     
     # Read coofilename input from MulSKIPs
-    print('Reading phases from {}...'.format(coofilename))
     t0 = time.time()
-    value_latt  = np.zeros((lenz,leny*lenx), dtype=int)
 
-    with open(coofilename,"r") as filein: # faster than np.loadtxt
-        lines = filein.readlines()
-        for i, line in enumerate(reversed(lines)):
-            words = line.split()
-            value_latt[i] = words
+    if(MPI.rank(comm)==0):
+        if driver != None:
+            # Receive phases from MulSKIPS via socket                
+            C  = np.zeros((lenz,leny*lenx), dtype=np.int32)
+            # dtype=np.int32 is fundamental!
+
+            # Send modified array to mulskips 
+            stat = driver.get_status()
+            if stat == Status.Up | Status.HasData:
+                print('Receiving phases from MulSKIPS...')
+                C = driver.get_data(C, dtype='PHASES')
+                print('Data received (shape: {}): \n {}'.format(C.shape, C)) 
+
+            value_latt = C[::-1, ...] # remember to reverse order along z before processing it! Fenics is upside down
+
+        else:
+            # Read from file
+            value_latt  = np.zeros((lenz,leny*lenx), dtype=np.int32)
+            print('Reading phases from {}...'.format(coofilename))
+            with open(coofilename,"r") as filein: # faster than np.loadtxt
+                lines = filein.readlines()
+                for i, line in enumerate(reversed(lines)):
+                    words = line.split()
+                    value_latt[i] = words
     MPI.barrier(comm)
+
     if len(value_latt[0]) != lenx*leny: # Check
         print('ERROR: Dimension of coofilename is not ({}, {})'.format(lenz,leny*lenx))
         sys.exit()
@@ -910,6 +1053,7 @@ def read_phases_from_mulskips(coofilename, rundirname, tstep,
     # (we already know where walls are from wall_map, and we don't care about zeros because we are only modifying Ph_tmp_array where it is solid)
     value_latt_flat = value_latt.ravel()
     KMCnotwall = np.isin(value_latt_flat, [1,2,3,4]).nonzero()[0] 
+    nsolid_KMC = len(KMCnotwall)
 
     # For 1 processor, this is how we can fill Ph_tmp_array in one line: 
     # Ph_tmp_array[dofs_cell_map[KMCnotwall]] += value_latt_flat[KMCnotwall].reshape(-1, 1)  # reshape is needed just to allow broadcasting
@@ -926,28 +1070,32 @@ def read_phases_from_mulskips(coofilename, rundirname, tstep,
     # Set =0 if the dof is liquid or wall, =1 if dof is solid
     Ph_tmp_array[Ph_tmp_array > 0] = 1.  # solid=1, rest is 0 for now...
     nsolid = len((Ph_tmp_array > 0).nonzero()[0])
-    Ph_tmp_array[wall_map > 5] = 1.   # now walls are also =1, and only liquid is =0
+    Ph_tmp_array[wall_map > 5] = 1.   # now walls /air are also =1, and only liquid is =0
     nliquid = len((Ph_tmp_array == 0).nonzero()[0])
+    nPh = len(Ph_tmp_array)
 
     # Print out info
-    nPh = len(Ph_tmp_array)
-    print('Process {}: Total: {}'.format(MPI.rank(comm), nPh))
-    MPI.barrier(comm)
-    print('Process {}: Solid phase atoms: {}'.format(MPI.rank(comm), nsolid))
-    MPI.barrier(comm)
-    print('Process {}: Liquid phase atoms: {}'.format(MPI.rank(comm), nliquid))
-    MPI.barrier(comm)
-    print('Process {}: Walls: {}'.format(MPI.rank(comm), nPh-nsolid-nliquid))
+    if MPI.size(comm) > 1:
+        print('Process {}: Total: {}'.format(MPI.rank(comm), nPh))
+        MPI.barrier(comm)
+        print('Process {}: Crystal sites: {}'.format(MPI.rank(comm), nsolid))
+        MPI.barrier(comm)
+        print('Process {}: Air / Liquid sites: {}'.format(MPI.rank(comm), nliquid))
+        MPI.barrier(comm)
+        print('Process {}: Non-evolving sites: {}'.format(MPI.rank(comm), nPh-nsolid-nliquid))
+        MPI.barrier(comm)
 
     # Sum over processors
     MPI.barrier(comm)
     n_tot = int(MPI.sum(comm, nPh))
     nsolid_tot = int(MPI.sum(comm, nsolid))
+    nsolid_KMC_tot = int(MPI.sum(comm, nsolid_KMC))
     nliquid_tot = int(MPI.sum(comm, nliquid))
     if MPI.rank(comm) == 0:
         print('Total Solid phase atoms: {}'.format(nsolid_tot))
         print('Total Liquid phase atoms: {}'.format(nliquid_tot))
-        print('Total Walls: {}'.format(n_tot-nsolid_tot-nliquid_tot))
+        print('Total Walls/air: {}'.format(n_tot-nsolid_tot-nliquid_tot))
+        print('Total Solid phase atoms in MulSKIPS: {}'.format(nsolid_KMC_tot))
     MPI.barrier(comm)
 
     # # Savetxt if you need to double check...
@@ -1019,7 +1167,140 @@ def read_phases_from_mulskips(coofilename, rundirname, tstep,
     MPI.barrier(comm)
 
 
-    return Ph_tmp, nliquid_tot
+    return Ph_tmp, nsolid_KMC_tot
+
+# ----------------------------------------------------------------------------------
+
+
+def get_XGeS_from_mulskips(rundirname, tstep, 
+    cell_map, rank_map, wall_map, V, dofmap, comm,
+    alat, xBox0, yBox0, zBox0, lenx, leny, lenz,
+    coofilename=None, driver=None):
+    
+    # Read coofilename input from MulSKIPs
+    t0 = time.time()
+
+    if(MPI.rank(comm)==0):
+        if driver != None:
+            # Receive XGeS from MulSKIPS via socket                
+            D  = np.zeros((lenz,leny*lenx), dtype=np.int32)
+            # dtype=np.int32 is fundamental!
+
+            # Send modified array to mulskips 
+            stat = driver.get_status()
+            if stat == Status.Up | Status.HasData:
+                print('Receiving XGeS from MulSKIPS...')
+                D = driver.get_data(D, dtype='XGE')
+                print('Data received (shape: {}): \n {}'.format(D.shape, D)) 
+            value_latt = D[::-1, ...] # remember to reverse order along z before processing it! Fenics is upside down
+
+        else:
+            print('XGeS can currently be updated only through sockets. Please set driver flag.')
+            sys.exit()
+            # # Read from file
+            # value_latt  = np.zeros((lenz,leny*lenx), dtype=np.int32)
+            # print('Reading phases from {}...'.format(coofilename))
+            # with open(coofilename,"r") as filein: # faster than np.loadtxt
+            #     lines = filein.readlines()
+            #     for i, line in enumerate(reversed(lines)):
+            #         words = line.split()
+            #         value_latt[i] = words
+            # if len(value_latt[0]) != lenx*leny: # Check
+            #     print('ERROR: Dimension of coofilename is not ({}, {})'.format(lenz,leny*lenx))
+            #     sys.exit()
+            # print('DONE Reading XGeS from {}. ETA: {} sec'.format(coofilename, time.time()-t0))
+    MPI.barrier(comm)
+
+    if(MPI.rank(comm)==0): print('Mapping XGeS from MulSKIPs superlattice to fem mesh...')
+    MPI.barrier(comm)
+    # Loop over cells, get relative dofs and cumulate value reading from superlattice
+    # Note: dofs can belong to multiple cells.
+    t0 = time.time()
+    # Initialize new fem vector of zeros 
+    XGeS_tmp = Function(V)
+    XGeS_tmp.assign(Constant(0.0))    
+    XGeS_tmp_array = XGeS_tmp.vector().get_local()
+
+    # Find unique cell indices in cell_map which correspond to the KMC box 
+    cell_map_flat = cell_map.ravel()
+    KMCcells, iKMCc = np.unique(cell_map_flat, return_inverse=True)
+    # Note that KMCcells[iKMCc] == cell_map_flat --> print(np.allclose(KMCcells[iKMCc], cell_map_flat))
+    # We will use this below to map back the dofs
+
+    # Now we find the map of dofs corresponding to the unique(cell_map_flat)!
+    KMC_dofs_cell = [] # it will always be sized [len(KMCcells), 4] if not MPI. 
+    # List is probably better than array when MPI is used, and when dof number x cell varies..
+    # For speed gain, initialize directly as np.zeros(len(KMCcells), 4)
+    my_first, my_last = dofmap.ownership_range() # global
+    for ic, kmccell in enumerate(KMCcells):   # this loop is muuuch faster than those over KMC sites
+        # print('\r', 'Iter {:7d} /{:7d}'.format(ic, len(KMCcells)), end='')
+        dofs_cell = dofmap.cell_dofs(kmccell)  # local
+        dofs_cell_ok = []
+        for dof in dofs_cell:
+            global_dof = dofmap.local_to_global_index(dof)  # global
+            if my_first <= global_dof < my_last:
+                dofs_cell_ok.append(dof)
+        KMC_dofs_cell.append(dofs_cell_ok)
+    MPI.barrier(comm)
+    # if(MPI.rank(comm)==0):print(''); MPI.barrier(comm)   <-------- QUESTO è IL MALE. NON FARLO MAI.
+
+    # Now we just need to expand the map back to the lenz*lenx*leny size, using the iKMCc indices
+    dofs_cell_map = np.asarray(KMC_dofs_cell)[iKMCc]
+    # This array now contains a 1:1 correspondence between each KMC site and its corresponding dofs in the mesh
+    # It can be used to select elements from XGeS_tmp_array!
+
+    # We now need to cumulate value_latt elements on the corresponding dofs within XGeS_tmp_array 
+    # We will restrict only to where value_latt is different from 10 or 0 or 1 (=Si) 
+    # (we already know where walls are from wall_map, and we don't care about zeros because we are only modifying XGeS_tmp_array where it is solid)
+    value_latt_flat = value_latt.ravel()
+    KMCnotwall = np.isin(value_latt_flat, [1,2]).nonzero()[0]
+    nsolid_KMC = len(KMCnotwall)
+
+    # ----------------------------------------
+    # I compute it as fraction of Ge averaged within the volume associated to each dof. The accuracy will depend on the mesh resolution, 
+    # but no need for defining atomic volumes or spheres arount KMC points, which would anyways need to be converged
+
+    # For 1 processor, this is how we can fill XGeS_tmp_array in one line: 
+    # XGeS_tmp_array[dofs_cell_map[KMCnotwall]] += value_latt_flat[KMCnotwall].reshape(-1, 1)  # reshape is needed just to allow broadcasting
+    # As an alternative, the block below works also for MPI, and it is fast!
+    rank_map_flat = rank_map.ravel()
+    
+    tmp_array_Ge = XGeS_tmp_array.copy()
+    tmp_array_Si = XGeS_tmp_array.copy()
+    for izj in KMCnotwall:
+        if MPI.rank(comm) == rank_map_flat[izj]:
+            if value_latt_flat[izj] == 1:
+                tmp_array_Si[dofs_cell_map[izj]] += 1
+            elif value_latt_flat[izj] == 2:
+                tmp_array_Ge[dofs_cell_map[izj]] += 1
+        MPI.barrier(comm)
+    MPI.barrier(comm)
+    tmp_array_SiGe = tmp_array_Ge + tmp_array_Si
+    # fill dof-function wherever there are no divisions by 0. Rest is left to zero (does not matter, because it's air and substrate).
+    XGeS_tmp_array[tmp_array_SiGe>0] = tmp_array_Ge[tmp_array_SiGe>0] / tmp_array_SiGe[tmp_array_SiGe>0]  
+   
+    # # Savetxt if you need to double check...
+    # np.savetxt('XGeS_tmp_array_p{}.dat'.format(MPI.rank(comm)), XGeS_tmp_array)
+    # print('Process {} has saved XGeS_tmp_array of type {} to file... '.format(MPI.rank(comm), type(XGeS_tmp_array)))
+    # MPI.barrier(comm)
+    
+    XGeS_tmp.vector().set_local(XGeS_tmp_array)
+    XGeS_tmp.vector().apply('insert')
+    
+    if(MPI.rank(comm)==0): print('DONE Mapping XGeS from MulSKIPs superlattice to fem mesh. ETA: {} sec'.format(time.time()-t0))
+    MPI.barrier(comm)
+
+
+    # # TO BENCHMARK do a line plot in paraview of this file. In bulk it should be equal to Ge fraction in seed
+    ### Visualize x 3D array in the mesh 
+    if(MPI.rank(comm)==0): print('Writing XGeS {}/InterpXGeS_{:.1f}.pvd file...'.format(rundirname, tstep)); t0 = time.time()
+    MPI.barrier(comm)
+    fileInterp = File(rundirname+"/InterpXGeS_{:.1f}.pvd".format(tstep))
+    fileInterp << XGeS_tmp
+    if(MPI.rank(comm)==0): print('DONE writing phases {}/InterpXGeS_{:.1f}.pvd file. ETA: {} sec'.format(rundirname, tstep, time.time()-t0))
+    MPI.barrier(comm)
+
+    return XGeS_tmp
 
 # ----------------------------------------------------------------------------------
 

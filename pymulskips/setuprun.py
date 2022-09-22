@@ -7,36 +7,85 @@ import os,shutil,subprocess,sys
 # SETUP AND RUN MULSKIPS
 ##### --------------------------------------------------------------------------
 
+###### INTRODUCI MODALITà 'INITIALIZE' E 'RUN' IN run_mulskips
+### INITIALIZE: LAUNCH SOCKET E LEGGI GEOM FROM MAIN.F
+### RUN: CREA START.DAt IN CURRENT FOLDER, RUN MULSKIPS, FLUSH STUFF IN RUNDIR, REMOVE STUFF FROM CURRENT FOLDER
+
 # Function to Generate input for mulskips and run mulskips simulation 
-def run_mulskips(execpath, runpath, Simulation, mp, PtransZig, 
-    ExitStrategy='Iter', OutMolMol=None, IterMax=None, TotTime=None, OutTime=None,
+def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
+    PtransZig=1.0, ExitStrategy='Iter', OutMolMol=None, IterMax=None, TotTime=None, OutTime=None,
     Seed_box=[120,120,120], RunType='R', IDUM=9117116, setup_only=False,
-    cadfilename=None, tempfilename=None, LenVac=None, LenNuc=None, homogeneous=False,
+    cadfilename=None, tempfilename=None, LenVac=None, LenNuc=None, initialState='homogeneous', LenSiGe=None,
     SaveCoo=False, coofilename=None,
     SaveFinalState=False, restartfilename=None,
-    useProbTable=False, ProbTable=None):
+    useProbTable=False, ProbTable=None, driver=None):
     """
     Generate input for mulskips and run mulskips simulation.
     """
     t0 = time.time()
 
-    # detect the current working directory and print it
-    path = os.getenv("PWD")
-    print ("The current working directory is %s" % path)
+    # Fundamental check
+    necessary_input = [execpath, runpath, setup_only]
+    if not all(v is not None for v in necessary_input):
+        print('\nERROR. Please define all the necessary input (see list below):')
+        print('[execpath, runpath, setup_only]')
+        print(necessary_input)
+        sys.exit()    
 
+
+
+    # Fundamental check
+    necessary_input = [Simulation, mp]
+    if not all(v is not None for v in necessary_input):
+        print('\nERROR. Please define all the necessary input (see list below):')
+        print('[Simulation, mp]')
+        print(necessary_input)
+        sys.exit()    
 
     print('\n********************************** Generating MulSKIPs input file (start.dat) **********************************')
     print('*********** Input arguments:')
     print('Executable directory: ', execpath)
     print('Simulation directory: ', runpath)
-    necessary_input = [execpath, runpath, Simulation, mp, PtransZig]
-    if not all(v is not None for v in necessary_input):
-        print('\nERROR. Please define all the necessary input (see list below):')
-        print('[execpath, runpath, Simulation, mp, PtransZig]')
-        print(necessary_input)
-        sys.exit()    
-    print('Mulskips class: ', mp)
     print('Type of simulation: ', Simulation)
+    print('Mulskips class: ', mp)
+
+    # Skip if MulSKIPS needs to be run in the current directory 
+    path = os.getenv("PWD")
+#    print(path)
+#    print(os.getcwd())
+#    print(os.path.abspath(runpath))
+
+    if os.path.abspath(runpath) == path or os.path.abspath(runpath) == os.getcwd():
+        print ("Running MulSKIPS in the current directory: {}".format(path))
+    else:
+
+        if runpath in ['.', './']:
+            print("\nYou want to run MulSKIPS in the current directory?")
+            print("Something is wrong...please set the run directory to either:\n{}\n  or this:\n{}\n".format(path, os.getcwd()))
+
+        # create the directory runpath where to run the mulskips code
+        # remove the runpath directory if it already exist
+        try:
+            shutil.rmtree(runpath)
+        except OSError as e:
+            print("Error: %s : %s" % (runpath, e.strerror))
+
+        # Create new directory runpath    
+        try:
+            os.mkdir(runpath)
+        except OSError:
+            print ("Creation of the directory %s failed" % runpath)
+        else:
+            print ("Successfully created the directory %s " % runpath)
+
+        # Change from current working directory path to runpath    
+        try:
+            os.chdir(runpath)
+            print('Directory changed to: {}'.format(runpath))
+        except OSError:
+            print("Can't change the Current Working Directory")
+
+
     print('PtransZig: ', PtransZig)
     print("ExitStrategy: ", ExitStrategy)
     if ExitStrategy == 'Iter':
@@ -90,9 +139,13 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
 
     if SaveCoo:
         savecooflag = 'T'
-        if coofilename is None:
-            print('ERROR: Please provide coofilename... ')
-            sys.exit()
+        if driver == None:
+            if coofilename is None:
+                print('ERROR: Please provide coofilename... ')
+                sys.exit()
+        else:
+            print('Phases will not be written to file because sockets are ON')  
+
     else:
         savecooflag = 'F'
 
@@ -113,26 +166,51 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
                 NB: We'll set only energetics in start.dat. Probabilities will be calculated 
                 directly inside mulskips using T map from fem.
                 """
+                if driver==None and tempfilename==None: 
+                    print('ERROR: please set \'tempfilename\' or \'driver\' flag')
+                    sys.exit()
+                elif driver!=None and tempfilename!=None: 
+                    print('ERROR: please set \'tempfilename\' or \'driver\' flag')
+                    sys.exit()
+
                 # Check input is OK
-                necessary_input = [TotTime, LenVac, LenNuc, tempfilename, cadfilename, SaveCoo, coofilename, restartfilename]
+                necessary_input = [TotTime, LenVac, LenNuc, SaveCoo, initialState, LenSiGe]
                 if not all(v is not None for v in necessary_input):
                     print('\nERROR. Please define all the necessary input (see list below):')
-                    print('[TotTime, LenVac, LenNuc, tempfilename, cadfilename, SaveCoo, coofilename, restartfilename]')
+                    print('[TotTime, LenVac, LenNuc, SaveCoo, initialState, LenSiGe]')
                     print(necessary_input)
                     sys.exit()
+
+                if driver == None:
+                    necessary_input = [tempfilename, cadfilename, coofilename, restartfilename]
+                    if not all(v is not None for v in necessary_input):
+                        print('\nERROR. Please define all the necessary input (see list below):')
+                        print('[tempfilename, cadfilename, coofilename, restartfilename]')
+                        print(necessary_input)
+                        sys.exit()
+                    print('Input CAD geometry file: ', path+'/'+cadfilename)    
+                    print('Input temperature map file: ', path+'/'+tempfilename)  
+                else:  
+                    print('Input CAD and temperature files are not provided because sockets are ON')  
+
                 print('Top air thickness : {} Ang'.format(LenVac))
                 print('Nucleus radius : {} Ang'.format(LenNuc))
-                print('Input CAD geometry file: ', path+'/'+cadfilename)    
-                print('Input temperature map file: ', path+'/'+tempfilename)    
-                if not SaveCoo:
-                    print('ERROR: Please set SevaCoo to \'T\' and provide coofilename... ')
-                    sys.exit()
-                print('Output Coor file: ', path+'/'+coofilename)    
-                print('Output checkpoint file for restart run: ', path+'/'+restartfilename)    
-                if homogeneous:
+                print('SiGe thickness : {} Ang'.format(LenSiGe))
+                
+                if driver == None:
+                    if SaveCoo:
+                        print('Output Coor file: ', path+'/'+coofilename)    
+                    else:
+                        print('ERROR: Please set SaveCoo to \'T\' and provide coofilename unless sockets are used... ')
+                        sys.exit()
+                    print('Output checkpoint file for restart run: ', path+'/'+restartfilename)    
+                
+                if initialState=='homogeneous':
                     homoflag = 'T'
-                else:
+                elif initialState=='inhomogeneous':
                     homoflag = 'F'
+                elif initialState=='tripleSF':
+                    homoflag = 'D'
                 print('Model homogeneous nucleation: ', homoflag)
 
                 # Generation of the evaporation energetics
@@ -216,19 +294,32 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
         if Simulation == 'IN':
             file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
         elif Simulation == 'LA':
-            file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
-            file.write(path+'/'+tempfilename + "\n") # do not put comments here, only the path
-            file.write(str(mp.Tm) + " ! Melting temperature in Kelvin" + "\n")
-            file.write(str(mp.calibration_params['P0']) + " ! prefactor P0" + "\n")
-            file.write(str(mp.calibration_params['A']) + " ! errf param A" + "\n")
-            file.write(str(mp.calibration_params['Tflex']) + " ! errf param Tflex" + "\n")
+            if driver == None:
+                file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
+                file.write(path+'/'+tempfilename + "\n") # do not put comments here, only the path
+            else:
+                file.write('None' + "\n") # do not put comments here, only the path 
+                file.write('None' + "\n") # do not put comments here, only the path 
+            file.write("{} ! Melting temperature in Kelvin \n".format(' '.join([str(x) for x in mp.Tm])))
+            file.write("{} ! prefactor P0 \n".format(' '.join([str(x) for x in mp.calibration_params['P0']])))
+            file.write("{} ! errf param A \n".format(' '.join([str(x) for x in mp.calibration_params['A']])))
+            file.write("{} ! errf param Tflex \n".format(' '.join([str(x) for x in mp.calibration_params['Tflex']])))
             file.write("{:.15f}".format(LenVac) + " ! LenVac -> Top air thickness in Ang" + "\n")
             file.write("{:.15f}".format(LenNuc) + " ! LenNuc -> Nucleus radius in Ang" + "\n")
-            file.write(homoflag + " ! Model Homogeneous Nucleation" + "\n")
+            file.write(homoflag + " ! Initial Nucleation State [homogeneous, inhomogeneous, tripleSF] " + "\n")
+            if initialState=='tripleSF':
+                Sys_size=' '.join([str(s) for s in Seed_box])
+                file.write(Sys_size+" ! Len1 Len2 Len3 Len4 Len5 for configuring a triple SF" + "\n")
         else:
             Sys_size=' '.join([str(s) for s in Seed_box])
             file.write(Sys_size+" ! Len1 [Len2 Len3 Len4 Len5]" + "\n")
         
+        if mp.listcryZ == [14, 32]: # SiGe 
+            file.write(str(mp.calibration_params['X0'][1]) + " ! Ge fraction in substrate " + "\n")
+            if Simulation == 'LA':
+                file.write("{:.15f}".format(LenSiGe) + " ! LenSiGe -> SiGe thickness in Ang" + "\n")
+            #     file.write(str(mp.calibration_params['X'][1]) + " ! Ge fraction in liquid " + "\n")
+
         file.write(str(PtransZig)+" ! PtransZig" +  "\n")
         file.write("{:.15f}".format(mp.KMC_sf) + " ! KMC_sf -> KMC Super-Lattice parameter in Ang" + "\n")
 
@@ -250,7 +341,10 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
             file.write(path+'/'+restartfilename + "\n") # do not put comments here, only the path
         file.write(savecooflag+" ! Save final Coor" + "\n")
         if SaveCoo: # For LA this must be T
-            file.write(path+'/'+coofilename + "\n") # do not put comments here, only the path
+            if driver == None: 
+                file.write(path+'/'+coofilename + "\n") # do not put comments here, only the path
+            else:
+                file.write('None' + "\n") # do not put comments here, only the path
 
         # Probabilities
         if Simulation == 'ST' and useProbTable:
@@ -287,37 +381,6 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
         print("DONE writing start.dat")
         return
 
-
-
-    # ------- RUN MULSKIPS
-
-    # Full path of the compiled mulskips executable:
-    mulskipsexecutable = execpath+'/mulskips.e | tee log.txt;'
-    print ("The executable directory is %s" % execpath)
-
-    # create the directory runpath where to run the mulskips code
-    # remove the runpath directory if it already exist
-    try:
-        shutil.rmtree(runpath)
-    except OSError as e:
-        print("Error: %s : %s" % (runpath, e.strerror))
-
-    # Create new directory runpath    
-    try:
-        os.mkdir(runpath)
-    except OSError:
-        print ("Creation of the directory %s failed" % runpath)
-    else:
-        print ("Successfully created the directory %s " % runpath)
-
-    # Change from current working directory path to runpath    
-    try:
-        os.chdir(runpath)
-        print('Directory changed to: {}'.format(runpath))
-    except OSError:
-        print("Can't change the Current Working Directory")
-
-
     # Wrote out start.dat in runpath
     print_file_input()
 
@@ -327,8 +390,24 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
         for key, value in mp.calibration_params.items():
             ff.write(' {} \t--> {}\n'.format(key, value))
 
-    endok = True
+
+    print('DONE MulSKIPs setup. ETA: {} sec'.format(time.time()-t0))
+
+
+
+
+    # ------- RUN MULSKIPS
+
+    # Continue only if setup_only is False
     if not setup_only:
+
+        t0 = time.time()
+
+        # Full path of the compiled mulskips executable:
+        mulskipsexecutable = execpath+'/mulskips.e | tee log.txt;'
+        print ("The executable directory is %s" % execpath)
+
+        endok = True
         # execute the mulskips.e program with the input file start.dat
         print('\n********************************** Starting MulSKIPs **********************************')
         make_process = subprocess.Popen(mulskipsexecutable, shell=True, stdout=subprocess.PIPE)
@@ -339,15 +418,6 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
             sys.stdout.flush()
         print('********************************** Finished MulSKIPs **********************************\n')
 
-        # !rm *.src
-        # !mkdir xyz
-        # !mkdir d_xyz
-        # !mkdir v_xyz
-        # !mkdir w_xyz
-        # !mv I*_d.xyz d_xyz/
-        # !mv I*_v.xyz v_xyz/
-        # !mv I*_w.xyz w_xyz/
-        # !mv I*.xyz xyz/
 
         """ Check if mulskips ended with few particles error """
         string_to_search = "few MC particles: stop MC"
@@ -357,7 +427,11 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
                     endok = False
 
         print('DONE MulSKIPs run. ETA: {} sec'.format(time.time()-t0))
-    
+
+        return endok
+
+
+
     # Change from runpath to path    
     try:
         os.chdir(path)
@@ -365,8 +439,97 @@ def run_mulskips(execpath, runpath, Simulation, mp, PtransZig,
     except OSError:
         print("Can't change the Current Working Directory") 
         exit(0)
+    
+    return
 
+
+def compile_mulskips(execpath):
+    # Change from runpath to path    
+    try:
+        os.chdir(execpath)
+        print('Directory changed to: {}'.format(execpath))
+    except OSError:
+        print("Can't change the Current Working Directory") 
+        exit(0)
+
+    # compile the mulskips.e program 
+    print('\n********************************** Starting MulSKIPS compilation **********************************')
+    make_process = subprocess.Popen('make clean ; make | tee make.log;', shell=True, stdout=subprocess.PIPE)
+    while True:
+        line = make_process.stdout.readline()
+        if not line:break
+        print('MulSKIPS:\t'+str(line.rstrip(), "utf-8")) #output to console in time
+        sys.stdout.flush()
+    print('********************************** Finished MulSKIPS compilation **********************************\n')
+
+    """ Check if mulskips compiled without errors """
+    str1 = "Compilation terminated"
+    str2 = "make: Nothing to be done for 'what'."
+    endok = False
+    with open('make.log', 'r') as f:
+        for line in f:
+            if str1 in line or str2 in line:
+                endok = True
+
+    # Change from runpath to path    
+    path = os.getenv("PWD")
+    try:
+        os.chdir(path)
+        print('Directory changed to: {}'.format(path))
+    except OSError:
+        print("Can't change the Current Working Directory") 
+        exit(0)
 
     return endok
 
 
+def setup_mulskips_src(execpath, lenx, leny, lenz):
+    
+    from tempfile import NamedTemporaryFile
+    defsystemfile = execpath+'/modules/defsystem.f'
+    pattern = "INTEGER, PARAMETER :: LenX="
+    newstring = "       INTEGER, PARAMETER :: LenX={}, LenY={}, LenZ={}\n".format(lenx, leny, lenz)
+    boxupdate, boxok = False, False
+    with open(defsystemfile) as fin, NamedTemporaryFile(dir=execpath+'/modules', delete=False) as fout:
+        for line in fin:
+            if pattern in line:
+                oldstring = line
+                if line.startswith(newstring): 
+                    boxok = True
+                else:
+                    line = newstring
+                    boxupdate = True
+            fout.write(line.encode('utf8'))
+        os.rename(fout.name, defsystemfile)
+    # Delete tmp file...
+    
+    # if recompile:
+    #     print('Re-compiling MulSKIPS due to update of box size.')
+    #     print('Old box size: {} '.format(oldstring[29:-1]))
+    #     print('New box size: LenX={}, LenY={}, LenZ={}'.format(lenx, leny, lenz))
+    #     endok = compile_mulskips(execpath=execpath)
+    #     if not endok: 
+    #         print('ERROR: Something went wrong during the compilation of MulSKIPS.')
+    #         print('Further details in {}/make.log'.format(execpath))
+    # elif boxok:
+    #     print('Box is ok in MulSKIPS src. No need for recompiling.')
+    # else:
+    #     print('ERROR: Pattern not found in '+execpath+'/modules/defsystem.f')
+    #     sys.exit()
+
+    if boxupdate or boxok:
+        if boxupdate:
+            print('Compiling MulSKIPS with possible updated of box size.')
+            print('Old box size: {} '.format(oldstring[29:-1]))
+            print('New box size: LenX={}, LenY={}, LenZ={}'.format(lenx, leny, lenz))
+        else:
+            print('Box in MulSKIPS is ok.')
+        endok = compile_mulskips(execpath=execpath)
+        if not endok: 
+            print('ERROR: Something went wrong during the compilation of MulSKIPS.')
+            print('Further details in {}/make.log'.format(execpath))
+    else:
+        print('ERROR: Pattern not found in '+execpath+'/modules/defsystem.f')
+        sys.exit()
+
+    return

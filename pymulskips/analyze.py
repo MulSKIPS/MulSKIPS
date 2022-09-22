@@ -574,3 +574,87 @@ def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minfr
             plt.show()
 
         return coverage_ave
+
+
+def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None):
+    
+    if not what in ['surface', 'coverage', 'surface+coverage']:
+        print("ERROR: what should one of the following: \n'surface', 'coverage', 'surface+coverage'")
+        sys.exit() 
+
+    # Read MulSKIPS output
+    spec, x, y, z = np.loadtxt(xyzfile, skiprows=2, unpack=True,
+        dtype={'names':('spec', 'x', 'y', 'z'), 'formats':('U2', 'f8', 'f8', 'f8')})
+    xyz = np.array(list(zip(x,y,z)))
+    print('Number of atoms in MulSKIPS output: ', len(xyz))
+
+    """
+    Small filtering to fix internal bug in MulSKIPS.
+    Sometimes coverage atoms are duplicates of vacancies (O in file).
+    The lines below ensure that the duplicate coverages are removed.
+    The indices returned by np.unique will retain only O 
+    NB: we reverse the list to have all O at the beginning of the list.
+    This ensures that the second found duplicate is always the wrong coverage.
+    """
+    spec, xyz = spec[::-1], xyz[::-1] # this is enough to put ox at the beginning of the list
+    a, idx = np.unique(xyz, axis=0, return_index=True)
+    spec, xyz = spec[idx], xyz[idx]
+    print('Number of atoms in MulSKIPS output (after removing duplicates): ', len(xyz))
+
+    # Indices separated per species 
+    Hlist = (spec == 'H').nonzero()[0]
+    Cllist = (spec == 'Cl').nonzero()[0]
+    Olist = (spec == 'O').nonzero()[0]
+    Silist = (spec == 'Si').nonzero()[0]
+
+    if what == 'coverage': 
+    # Write only coordinates of coverage atoms (coincides with surface for high coverages)
+        xyz_final = xyz[np.concatenate((Hlist, Cllist))]
+        spec_final = spec[np.concatenate((Hlist, Cllist))]
+    
+    else:  # Coordinates of coverage + surface or only surface (see below) 
+        from scipy import spatial
+        bondlength = alat * (3**0.5)/4 # Ang
+        toremove = []
+
+        # First filter the system without translation
+        tree = spatial.KDTree(xyz)
+        for i in Olist:
+            dd, iout = tree.query(xyz[i], k=5) # O atom itself + its max 4 neighbours
+            toremove += iout[dd < bondlength+0.1].tolist()
+
+        # Still Some Si atoms wrapped due to PBC are not captured 
+        # So now repeat the strategy after translating a bit the structure along x and y
+        # Remember to wrap all atoms falling outside back inside the box
+        xyz1 = xyz + [2*bondlength, 2*bondlength, 0]
+        xmax, ymax = np.amax(xyz[:,0]), np.amax(xyz[:,1])
+        xyz1[xyz1[:,0] > xmax] -= [xmax, 0, 0] # wrap back inside along x
+        xyz1[xyz1[:,1] > ymax] -= [0, ymax, 0] # wrap back inside along y
+        tree = spatial.KDTree(xyz1)
+        for i in Olist:
+            dd, iout = tree.query(xyz1[i], k=5) # O atom itself + its max 4 neighbours
+            toremove += iout[dd < bondlength+0.1].tolist()
+
+        if what == 'surface':
+            toremove += Hlist.tolist()
+            toremove += Cllist.tolist()
+
+        # Now remove all of them (no need to remove duplicates in toremove list) 
+        xyz_final = np.delete(xyz, toremove, axis=0)
+        spec_final = np.delete(spec, toremove, axis=0)
+
+    print(f'Number of {what} atoms: ', len(xyz_final))
+
+    # Write output XYZ file just to visualize
+    with open(xyzfile) as fin:
+        head = [next(fin) for x in range(2)]
+    np.savetxt(newfile, np.c_[spec_final, xyz_final], fmt='%s', 
+        header=str(len(spec_final))+"\n"+head[-1], comments='')
+
+    # Write output XYZ file ready to be used in DEP3D
+    if DEP3Dfile is not None:
+        np.savetxt(DEP3Dfile, xyz_final, fmt='%.8f')
+
+    return
+
+
