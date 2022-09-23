@@ -1,17 +1,17 @@
 ### USAGE
 
 - Make sure you installed all the dependencies below
-- Make sure you updated the "execpath" variable in testIO.SiNW.py with your mulskips-source directory
+- Make sure you updated the "execpath" variable in run.py with your mulskips-source directory
 - Use the following command:
 
 ```
-python3 testIO.SiNW.py
+python3 run.py
 ```
 
-OR
+or this to run in as background process
 
 ```
-nohup python3 -u testIO.SiNW.py > log.out 2>&1 &
+nohup python3 -u run.py > log.out 2>&1 &
 ```
 
 - To run this example you need at least 5 GB free storage, to allocate 2 large auxiliary DAT files which can be removed after the run if you want.
@@ -61,7 +61,7 @@ Ref. https://cantera.org/install/
 pip3 install cashocs
 ```
 
-Make sure to install all cashocs dependencies first.
-(see https://pypi.org/project/cashocs/#manual-installation
+Make sure to install all cashocs dependencies first
+(see https://pypi.org/project/cashocs/#manual-installation)
 
 
