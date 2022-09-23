@@ -255,24 +255,10 @@ def mulskips2dolfin(coofilename, mpclass, mesh, subdomains, regions,
 
     # KMC lattice parameter in nm
     alat = mpclass.KMC_sf * 1e-1
+    lenx, leny, lenz = get_boxsize_from_mesh(mesh, alat)
 
-    # Box for MulSKIPS should be determined directly from the mesh size
-    # Mulskips should then be compiled accordingly
     xyz = mesh.coordinates() # nm
-    Lx = np.abs(xyz[:,0].max() - xyz[:,0].min())
-    Ly = np.abs(xyz[:,1].max() - xyz[:,1].min())
-    Lz = np.abs(xyz[:,2].max() - xyz[:,2].min())
-    print('alat in MulSKIPS = {} nm'.format(alat))
-    print('Box size in msh (nm) =', Lx, Ly, Lz)  
-    # KMC superlattice units alat (nm)
-    lenx = int(round(Lx/alat))
-    leny = int(round(Ly/alat))
-    lenz = int(round(Lz/alat)) 
-    print('Box size in MulSKIPS units =', lenx, leny, lenz)
-    lenx -= lenx%24
-    leny -= leny%24
-    print('Box size to be set in MulSKIPS to ensure periodicity =', lenx, leny, lenz)
-
+    
     xBox0 = xyz[:,0].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges 
     yBox0 = xyz[:,1].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges
     zBox0 = xyz[:,2].min() + 1e-10 # this 1e-10 is to avoid numerical imprecisions when colliding the point in the mesh at edges

@@ -1,7 +1,7 @@
 ### USAGE
 
 - Make sure you installed all the dependencies below
-- Make sure you updated the "execpath" in testIO.FDSOI.py with your mulskips-source directory
+- Make sure you updated the "execpath" variable in testIO.FDSOI.py with your mulskips-source directory
 - Use the following command:
 
 ```
@@ -23,19 +23,18 @@ No MPI is used.
 
 ### DEPENDENCIES
 
-Tested only for Python 3.8.10 using Ubuntu with the following libraries:
+Tested only for Python 3.8.10 using Ubuntu.
+The following libraries are required:
 - dolfin (2019.2.0.dev0)
 - cantera (2.6.0a4)
-- cashocs (1.4.0)
-- meshio (5.0.2)
+- cashocs (>= 1.4.0)
 
 The versions indicated are the only ones tested. 
 Please feel free to try some newest ones and report an issue if something does not work.
 
 NB: Conda installation of libraries WAS NOT TESTED.
 
-To install FEniCS on Unix system (tested also on WSL2 for Windows 10/11, with Ubuntu 20.04)
-(ref. https://fenicsproject.org/download/archive/):
+- To install FEniCS on Unix system (tested also on WSL2 for Windows 10/11, with Ubuntu 20.04):
 
 ```
 sudo apt-get install software-properties-common
@@ -44,18 +43,25 @@ sudo apt-get update
 sudo apt-get install fenics
 ```
 
-To install meshio and cashocs
-(ref. https://pypi.org/project/cashocs/#manual-installation):
+Ref. https://fenicsproject.org/download/archive/
+
+
+- To install Cantera:
 
 ```
-pip3 install meshio[all] --no-binary=h5py
+pip3 install cantera
+```
+
+Ref. https://cantera.org/install/
+
+
+- To install cashocs:
+
+```
 pip3 install cashocs
 ```
 
-To install Cantera
-(ref. https://cantera.org/install/):
+Make sure to install all cashocs dependencies first.
+(see https://pypi.org/project/cashocs/#manual-installation
 
-```
-pip3 cantera
-```
 

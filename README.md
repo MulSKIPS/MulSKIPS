@@ -8,19 +8,16 @@ A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resol
 ```
 git clone https://github.com/MulSKIPS/MulSKIPS.git
 cd /your_MulSKIPS_directory/mulskips-source/ 
-make clean ; make 
+make 
 ```
 
-If needed, edit the makefile.
-A successful compilation will generate a "mulskips.e" executable file.
+If something goes wrong, please double check (and edit, if needed) the makefile.
+A successful compilation will generate a "mulskips.e" executable file in the /your_MulSKIPS_directory/mulskips-source/ directory.
 
 - To run a simulation, go to your working directory, use pymulskips routines to generate a "start.dat" file with all simulation parameters, then simply call  /your_MulSKIPS_directory/mulskips.e  
 
-- To use the pymulskips routines in your python script, simply update your PYTHONPATH:
-
-```
-export $PYTHONPATH=$PYTHONPATH:/your_MulSKIPS_directory/pymulskips
-```
+- To use the pymulskips routines in your python script, simply copy the directory /your_MulSKIPS_directory/pymulskips/ into your working directory.
+In alternative, you can add /your_MulSKIPS_directory/pymulskips/ to your PYTHONPATH environment variable.
 
 - For examples of usage, see /your_MulSKIPS_directory/examples/.
 

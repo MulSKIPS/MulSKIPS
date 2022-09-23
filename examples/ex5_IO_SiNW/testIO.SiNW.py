@@ -100,7 +100,7 @@ Then runs the MulSKIPS simulation.
 All results will be in rundirname.
 """
 
-execpath = os.getenv("PWD")+'/mulskips-source' # path of MulSKIPS source code 
+execpath = '/your_MulSKIPS_directory/mulskips-source' # path of MulSKIPS source code 
 setuprun.setup_mulskips_src(execpath, lenx, leny, lenz) # it will rerecompile if needed
 rundirname = 'kmc_regions_' + '_'.join([str(x) for x in regions.values()])
 Nout = 10 # number of outputs
@@ -138,22 +138,22 @@ analyze.export_xyz(xyzfile, newfile, alat=alat_cubic, what=what, DEP3Dfile=DEP3D
 
 
 """ OPTIONAL 
-NB: dolfin2mulskips() MUST be run before this 
-Update mesh with new geometry obtained with MulSKIPs
-Leave the mesh unaltered and write the final MSH with the same mesh coordinates. 
-Synopsys will then need to do a remesh. 
+NB: dolfin2mulskips() MUST be run before this to get cell_map and wall_map 
+Write new dolfin mesh with extra cell data indicating the new region grown with MulSKIPS
+The same mesh coordinates of the original mesh will be used. 
+Anyways, to have a smooth surface in the new mesh after interpolation from MulSKIPS final lattice, a finer mesh in the gas region should be set in the initial MSH file. 
 """
 
-subdomains = io.mulskips2dolfin(f'{structurename}_AfterKMC.dat', mpclass, mesh, subdomains, regions, \
-    cell_map, rank_map, wall_map, pvdfilename=f'{structurename}_Mesh_AfterKMC', LA=False)
+# subdomains = io.mulskips2dolfin(f'{structurename}_AfterKMC.dat', mpclass, mesh, subdomains, regions, \
+#     cell_map, rank_map, wall_map, pvdfilename=f'{structurename}_Mesh_AfterKMC', LA=False)
 
 """ OPTIONAL
 Write dolfin mesh to msh format. 
 Makes new mesh with updated physical entities
 """
 
-io.dolfin2msh(structurename+'.msh', structurename+'_final.msh', \
-    mesh, subdomains, boundaries)
+# io.dolfin2msh(structurename+'.msh', structurename+'_final.msh', \
+#     mesh, subdomains, boundaries)
 
 
 
