@@ -1,23 +1,33 @@
 ### MulSKIPS
 A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resolution the kinetics of processes (e.g., PVD, CVD, laser annealing) involving elements, alloys and compounds characterized by the sp3 bond symmetry
 
-INSTALLATION
+INSTALLATION 
 
-To compile MulSKIPS use the following commands:
-- git clone <URL> (clone this directory)
-- cd /your_MulSKIPS_directory/mulskips-source/ (go to "mulskips-source" directory)
-- (edit makefile if needed)
-- make clean ; make 
-- cd ..
-This will create the "mulskips.e" executable file.
+- To compile MulSKIPS use the following commands:
 
-To use the routines in pymulskips simply add its path to your PYTHONPATH:
-- export $PYTHONPATH=$PYTHONPATH:/your_MulSKIPS_directory/pymulskips
-or copy the directory within the working directory from where you are running mulskips.e
+```
+git clone https://github.com/MulSKIPS/MulSKIPS.git
+cd /your_MulSKIPS_directory/mulskips-source/ 
+make clean ; make 
+```
 
-For example of usage, go to /your_MulSKIPS_directory/examples/
+If needed, edit the makefile.
+A successful compilation will generate a "mulskips.e" executable file.
 
-MORE DOCUMENTATION and EXAMPLE on PVD, CVD, LASER ANNEALING processes for various materials (Si, SiC, SiGe, ...) will be uploaded soon, so...STAY TUNED!
+- To run a simulation, go to your working directory, use pymulskips routines to generate a "start.dat" file with all simulation parameters, then simply call  /your_MulSKIPS_directory/mulskips.e  
+
+- To use the pymulskips routines in your python script, simply update your PYTHONPATH:
+
+```
+export $PYTHONPATH=$PYTHONPATH:/your_MulSKIPS_directory/pymulskips
+```
+
+- For examples of usage, see /your_MulSKIPS_directory/examples/.
+
+
+
+
+### MORE DOCUMENTATION and EXAMPLE on PVD, CVD, LASER ANNEALING processes for various materials (Si, SiC, SiGe, ...) will be uploaded soon, so...STAY TUNED!
 
 
 <!--
