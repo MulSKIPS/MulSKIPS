@@ -32,7 +32,7 @@ ex2. How to run a MulSKIPS simulation of CVD Si growth, with H2 and SiH4 as prec
 ex3. How to run a MulSKIPS simulation of ultra-fast Si melting
 ex4. How to run a MulSKIPS simulation of a Si laser annealing process
    (This is also based on MulSKIPS IO interface to CAD and FENICS)
-ex5. How to run a a MulSKIPS simulation of CVD SiNW growth starting from a MSH file and exporting the final surface atoms
+ex5. How to run a a MulSKIPS simulation of CVD SiNW (FDSOI) growth starting from a MSH file and exporting the final surface atoms
 ex6. How to analyze the results of MulSKIPS 
 ex7. How to setup a process calibration in MulSKIPS
 

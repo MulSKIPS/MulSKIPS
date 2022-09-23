@@ -3,7 +3,7 @@ from subprocess import call
 import sys, os, time
 import numpy as np
 from pymulskips import io, setuprun, process, analyze
-import cantera
+import cantera 
 print(f'cantera v{cantera.__version__}')
 import meshio
 print(f'meshio v{meshio.__version__}')
@@ -15,7 +15,7 @@ print(f'cashocs v{cashocs.__version__}')
 Load mesh and import it in Dolfin
 """
 
-structurename = 'si-cylinder-ox-removed-withphysicalentitiers_fps' # neglect .msh extension
+structurename = 'FDSOI_XLast_before_epitaxy_cut-withphysicalentities_fps' # neglect .msh extension
 
 # Use the line below to convert a geo into a msh file
 # call([f"gmsh -3 structurename.geo -o structurename.msh -format msh"], shell=True)
@@ -73,8 +73,15 @@ subdomains_unique_indices = np.unique(subdomains.array())
 print('User-defined subdomains labels in msh file = ', subdomains_unique_indices)
 # To make this more general and transparent, we define regions as a dictionary below
 # Remember to assign a type to all tetra regions in the MSH (visualize them in SVisual or gmsh)
-regions = { subdomains_unique_indices[0] : 0, # gas
-            subdomains_unique_indices[1] : 1} # evolving silicon
+regions = { subdomains_unique_indices[0] : 10, # non evolving regions
+            subdomains_unique_indices[1] : 1,  # evolving silicon
+            subdomains_unique_indices[2] : 10,  
+            subdomains_unique_indices[3] : 0,  # gas 
+            subdomains_unique_indices[4] : 10,  
+            subdomains_unique_indices[5] : 10,  
+            subdomains_unique_indices[6] : 10,  
+            subdomains_unique_indices[7] : 10,  
+            subdomains_unique_indices[8] : 10}  
 
 """ 
 Convert structure from Dolfin to MulSKIPS readable structure (outputs PVD/VTU files, and a DAT file).
@@ -104,10 +111,10 @@ execpath = os.getenv("PWD")+'/mulskips-source' # path of MulSKIPS source code
 setuprun.setup_mulskips_src(execpath, lenx, leny, lenz) # it will rerecompile if needed
 rundirname = 'kmc_regions_' + '_'.join([str(x) for x in regions.values()])
 Nout = 10 # number of outputs
-itermax = 350000000 # total number of KMC iterations
+itermax = 450000000 # total number of KMC iterations
 endok = setuprun.run_mulskips(execpath, rundirname, \
     Simulation='IN', mp=mpclass, \
-    PtransZig=1.0, RunType='R', IDUM=9117116, \
+    PtransZig=0.99, RunType='R', IDUM=9117116, \
     ExitStrategy='Iter', OutMolMol=int(itermax/Nout), IterMax=itermax, \
     cadfilename=f'{structurename}_InputKMC.dat', \
     SaveCoo=True, coofilename=f'{structurename}_AfterKMC.dat', \

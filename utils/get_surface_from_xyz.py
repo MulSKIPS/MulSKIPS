@@ -1,4 +1,4 @@
-from pymulskips_sockets import analyze
+from pymulskips import analyze
 import os
 
 rundir = os.getenv('PWD')+'/kmc_regions_10_1_10_0_10_10_10_10'

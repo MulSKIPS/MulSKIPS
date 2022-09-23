@@ -428,9 +428,15 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
 
         print('DONE MulSKIPs run. ETA: {} sec'.format(time.time()-t0))
 
+        # Change from runpath to path    
+        try:
+            os.chdir(path)
+            print('Directory changed to: {}'.format(path))
+        except OSError:
+            print("Can't change the Current Working Directory") 
+            exit(0)
+
         return endok
-
-
 
     # Change from runpath to path    
     try:
