@@ -34,9 +34,8 @@ Please feel free to try some newest ones and report an issue if something does n
 
 NB: Conda installation of libraries WAS NOT TESTED.
 
-To install FEniCS on Unix system (tested also on WSL2 for Windows, with Ubuntu 20.04):
-(ref. https://fenicsproject.org/download/archive/)
-To install FEniCS on Ubuntu, run the following commands:
+To install FEniCS on Unix system (tested also on WSL2 for Windows 10/11, with Ubuntu 20.04)
+(ref. https://fenicsproject.org/download/archive/):
 
 ```
 sudo apt-get install software-properties-common
@@ -45,16 +44,16 @@ sudo apt-get update
 sudo apt-get install fenics
 ```
 
-For meshio and cashocs:
-(ref. https://pypi.org/project/cashocs/#manual-installation)
+To install meshio and cashocs
+(ref. https://pypi.org/project/cashocs/#manual-installation):
 
 ```
 pip3 install meshio[all] --no-binary=h5py
 pip3 install cashocs
 ```
 
-For Cantera:
-(ref. https://cantera.org/install/)
+To install Cantera
+(ref. https://cantera.org/install/):
 
 ```
 pip3 cantera

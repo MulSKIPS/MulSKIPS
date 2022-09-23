@@ -1,23 +1,3 @@
-!> @Examples
-!!
-!!   Copyright (C) 2020-2021
-!!   @authors: Gaetano Calogero, Ioannis Deretzis, Giuseppe Fisicaro and Antonino La Magna
-!!   This file is part of the MulSKIPS code.
-!!   This file is distributed under the terms of the
-!!   GNU General Public License, see ~/COPYING file
-!!   or http://www.gnu.org/licenses/gpl-3.0.txt .
-!!   For the list of contributors, see ~/AUTHORS
-
-!!   MulSKIPS is a free software: you can redistribute it and/or modify
-!!   it under the terms of the GNU General Public License as published by
-!!   the Free Software Foundation, either version 3 of the License, or
-!!   (at your option) any later version.
-
-!!   MulSKIPS is distributed in the hope that it will be useful,
-!!   but WITHOUT ANY WARRANTY; without even the implied warranty of
-!!   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-!!   GNU General Public License for more details
-!!
 
 ### -- work in progress --
 
