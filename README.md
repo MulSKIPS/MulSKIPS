@@ -1,7 +1,7 @@
 ### MulSKIPS
 A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resolution the kinetics of processes (e.g., PVD, CVD, laser annealing) involving elements, alloys and compounds characterized by the sp3 bond symmetry
 
-INSTALLATION 
+### INSTALLATION 
 
 - To compile MulSKIPS use the following commands:
 
@@ -30,17 +30,17 @@ export $PYTHONPATH=$PYTHONPATH:/your_MulSKIPS_directory/pymulskips
 ### MORE DOCUMENTATION and EXAMPLE on PVD, CVD, LASER ANNEALING processes for various materials (Si, SiC, SiGe, ...) will be uploaded soon, so...STAY TUNED!
 
 
+### REFERENCES
+
+[A. La Magna, A. Alberti, E. Barbagiovanni, C. Bongiorno, M. Cascio, 
+I. Deretzis, F. La Via, and E. Smecca, "Simulation of the growth kinetics
+in group iv compound semiconductors" Phys. Status Solidi A 216, 1800597 (2019)].
+
+[G. Calogero, D. Raciti, P. Acosta-Alba, F. Cristiano, I. Deretzis, G. Fisicaro, K. Huet,
+S. Kerdilès, A. Sciuto and A. La Magna, "Multiscale modeling of ultrafast melting
+phenomena", npj Computational Materials 8, 36 (2022)]
+
+
 <!--
-**MulSKIPS/MulSKIPS** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-
-Here are some ideas to get you started:
-
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
+block comment
 -->
