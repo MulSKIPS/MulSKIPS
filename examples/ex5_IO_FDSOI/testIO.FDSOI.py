@@ -114,7 +114,7 @@ Nout = 10 # number of outputs
 itermax = 450000000 # total number of KMC iterations
 endok = setuprun.run_mulskips(execpath, rundirname, \
     Simulation='IN', mp=mpclass, \
-    PtransZig=0.99, RunType='R', IDUM=9117116, \
+    PtransZig=0.9999, RunType='R', IDUM=9117116, \
     ExitStrategy='Iter', OutMolMol=int(itermax/Nout), IterMax=itermax, \
     cadfilename=f'{structurename}_InputKMC.dat', \
     SaveCoo=True, coofilename=f'{structurename}_AfterKMC.dat', \
