@@ -1,6 +1,7 @@
 ### USAGE
 
 - Make sure you installed all the dependencies below
+- Make sure you copied the pymulskips directory in this folder, or added it to your PYTHONPATH
 - Make sure you updated the "execpath" variable in run.py with your mulskips-source directory
 - Use the following command:
 

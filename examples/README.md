@@ -2,10 +2,6 @@
 ### -- work in progress --
 
 This folder contains different tutorials and usage examples of MulSKIPS.
-All examples make use of the pymulskips library, which should be in your $PYTHONPATH.
-Otherwise you can make a copy of pymulskips directory in your working directory.
-
-Make sure you update the mulskips source path within the python scripts in the examples.
 
 Here is a list of the examples/tutorials:
 
