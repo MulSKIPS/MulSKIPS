@@ -71,7 +71,7 @@ def get_boxsize_from_mesh(mesh, alat):
 
 
 def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains, 
-    regionsfilename='KMCregions', return_maps=True, savemaps=False, return_box_size=False):
+    regionsfilename='KMCregions', return_maps=True, savemaps=False, return_box_size=False, z_reverse=True):
 
     comm = MPI.comm_world
     if(MPI.rank(comm)==0):
@@ -209,14 +209,24 @@ def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains,
         t0 = time.time()
         fileout=open(cadfilename,"w")
         lines=0
-        col=lenz-1
-        while col >= 0:
-            while lines < leny*lenx:
-                fileout.write("%s " % str(lattcell_map[col][lines]))
-                lines+=1
-            fileout.write("\n")
-            col-=1
-            lines=0
+        if z_reverse:
+            col=lenz-1
+            while col >= 0:
+                while lines < leny*lenx:
+                    fileout.write("%s " % str(lattcell_map[col][lines]))
+                    lines+=1
+                fileout.write("\n")
+                col-=1
+                lines=0
+        else:    
+            col=0
+            while col < lenz:
+                while lines < leny*lenx:
+                    fileout.write("%s " % str(lattcell_map[col][lines]))
+                    lines+=1
+                fileout.write("\n")
+                col+=1
+                lines=0
         fileout.close()
         print('DONE Writing geometry to {}. ETA: {} sec'.format(cadfilename, time.time()-t0))
     MPI.barrier(comm)
@@ -240,7 +250,7 @@ def dolfin2mulskips(cadfilename, mpclass, regions, mesh, subdomains,
 
 def mulskips2dolfin(coofilename, mpclass, mesh, subdomains, regions,
     cell_map, rank_map, wall_map, LA=False, 
-    pvdfilename='Mesh_AfterKMC'):
+    pvdfilename='Mesh_AfterKMC', z_reverse=True):
     
     comm = MPI.comm_world
     if(MPI.rank(comm)==0):
@@ -271,7 +281,11 @@ def mulskips2dolfin(coofilename, mpclass, mesh, subdomains, regions,
 
     with open(coofilename,"r") as filein: # faster than np.loadtxt
         lines = filein.readlines()
-        for i, line in enumerate(reversed(lines)):
+        if z_reverse:
+            mylines = reversed(lines)
+        else:
+            mylines = lines
+        for i, line in enumerate(mylines):
             words = line.split()
             value_latt[i] = words
     MPI.barrier(comm)
