@@ -2,7 +2,7 @@
 
 - Make sure you installed all the dependencies below
 - Make sure you copied the pymulskips directory in this folder, or added it to your PYTHONPATH
-- Make sure you updated the "execpath" variable in run.py with your mulskips-source directory
+- Make sure you updated the "execpath" variable in run.py with your mulskips-source directory FULL path
 - Use the following command:
 
 ```
@@ -19,7 +19,7 @@ nohup python3 -u run.py > log.out 2>&1 &
 These contain the geometry information needed to import the mesh into MulSKIPS.
 BUT keep them in the folder to avoid repeating the slow (a couple of hours on a good machine) MSH-MulSKIPS interpolation 
 in case you want to repeat only the KMC run, which is mush faster (minutes).
-No MPI is used.
+Please note that the code does not support MPI.
 
 
 ### DEPENDENCIES

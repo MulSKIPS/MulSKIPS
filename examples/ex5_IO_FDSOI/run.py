@@ -142,23 +142,22 @@ analyze.export_xyz(xyzfile, newfile, alat=alat_cubic, what=what, DEP3Dfile=DEP3D
 
 
 
-""" OPTIONAL 
-NB: dolfin2mulskips() MUST be run before this to get cell_map and wall_map 
-Write new dolfin mesh with extra cell data indicating the new region grown with MulSKIPS
+### OPTIONAL 
+
+""" 
+The lines below write a new dolfin mesh with extra cell data indicating the new region grown with MulSKIPS.
 The same mesh coordinates of the original mesh will be used. 
-IMPORTANT: to have a smooth surface in the new mesh after interpolation from MulSKIPS final lattice, 
+PS: to have a smooth surface in the new mesh after interpolation from MulSKIPS final lattice, 
 a finer mesh in the gas region should be set in the initial MSH file. 
+PPS: dolfin2mulskips() MUST be run before this to get cell_map and wall_map.
 """
 
-subdomains = io.mulskips2dolfin(f'{structurename}_AfterKMC.dat', mpclass, mesh, subdomains, regions, \
-    cell_map, rank_map, wall_map, pvdfilename=f'{structurename}_Mesh_AfterKMC', LA=False)
-
-""" OPTIONAL
-Write dolfin mesh to msh format. 
-Makes new mesh with updated physical entities
-"""
-
-io.dolfin2msh(structurename+'.msh', structurename+'_final.msh', \
-    mesh, subdomains, boundaries)
-
-
+# if cell_map == None:
+#     print('WARNING: dolfin2mulskips() MUST be executed before mulskips2dolfin() to get cell_map and wall_map variables.')
+#     sys.exit()
+# else:
+#     subdomains = io.mulskips2dolfin(f'{structurename}_AfterKMC.dat', mpclass, mesh, subdomains, regions, \
+#         cell_map, rank_map, wall_map, pvdfilename=f'{structurename}_Mesh_AfterKMC', LA=False)
+#     # Write dolfin mesh to msh format. 
+#     io.dolfin2msh(structurename+'.msh', structurename+'_final.msh', \
+#         mesh, subdomains, boundaries)
