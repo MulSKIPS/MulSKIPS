@@ -15,11 +15,11 @@ or this to run in as background process
 nohup python3 -u run.py > log.out 2>&1 &
 ```
 
-- To run this example you need at least 5 GB free storage, to allocate 2 large auxiliary DAT files which can be removed after the run if you want.
-These contain the geometry information needed to import the mesh into MulSKIPS.
-BUT keep them in the folder to avoid repeating the slow (a couple of hours on a good machine) MSH-MulSKIPS interpolation 
-in case you want to repeat only the KMC run, which is mush faster (minutes).
-Please note that the code does not support MPI.
+- The script produces a sequence of XYZ files located within the output /kmc_regions_\*/ directory (the number of snapshots "Nout" and can be changed withi the run.py script). 
+- A \*DEP3D.xyz file is also produced within the /kmc_regions_\*/ directory, ready to be imported in the DEP3D tool.  
+- To run this example you need at least 5 GB free storage, to allocate 2 large auxiliary DAT files which can be removed after the run if you want. These contain the geometry information needed to import the mesh into MulSKIPS.
+BUT keep them in the folder to avoid repeating the slow (a couple of hours on a good machine) MSH-MulSKIPS interpolation in case you want to repeat only the KMC run, which is mush faster (minutes).
+- The code does not support MPI.
 
 
 ### DEPENDENCIES
