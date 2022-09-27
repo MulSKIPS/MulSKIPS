@@ -1,0 +1,10 @@
+cantera>=2.6.0
+cashocs>=1.8.9
+ipython>=8.5.0
+ipywidgets>=7.7.0
+matplotlib>=3.5.2
+meshio>=5.3.4
+numpy>=1.21.0
+py3Dmol>=1.8.1
+scipy>=1.9.1
+h5py>=3.7.0
