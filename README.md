@@ -15,10 +15,12 @@ If something goes wrong, please double check (and edit, if needed) the makefile.
 A successful compilation will generate a "mulskips.e" executable file in the /your_MulSKIPS_directory/mulskips-source/ directory.
 
 - To run a simulation, go to your working directory, use pymulskips routines to generate a "start.dat" file with all simulation parameters, then simply call  /your_MulSKIPS_directory/mulskips.e  
-
 - To use the pymulskips routines in your python script, simply copy the directory /your_MulSKIPS_directory/pymulskips/ into your working directory.
 In alternative, you can add /your_MulSKIPS_directory/pymulskips/ to your PYTHONPATH environment variable.
-
+- The pymulskips module needs a lot of dependencies. You can install them manually or running the following command:
+```
+pip3 install -r /your_MulSKIPS_directory/pymulskips/requirements.txt
+```
 - For examples of usage, see /your_MulSKIPS_directory/examples/.
 
 
