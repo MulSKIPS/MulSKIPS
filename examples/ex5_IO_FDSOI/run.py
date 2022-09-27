@@ -15,14 +15,14 @@ print(f'cashocs v{cashocs.__version__}')
 Load mesh and import it in Dolfin
 """
 
-structurename = 'FDSOI_XLast_before_epitaxy_cut-withphysicalentities_fps' # neglect .msh extension
+structurename = 'FDSOI_XLast_before_epitaxy_cut-rotated-withphysicalentities_fps' # neglect .msh extension
 
 # Use the line below to convert a geo into a msh file
 # call([f"gmsh -3 structurename.geo -o structurename.msh -format msh"], shell=True)
 
 rescale = 1e3 # msh by Chiara is in micron. Here we need nm. 
 mesh, subdomains, boundaries, dx, ds, dS = io.msh2dolfin(structurename+'.msh', \
-    save_h5=True, rescale=rescale, rotate_angle=90, rotate_axis=1)
+    save_h5=True, rescale=rescale)
 
 
 
@@ -90,9 +90,10 @@ Returns also the box size to be used in MulSKIPS.
 NB: since this takes time, recycle existing DAT file in the current directory
 """
 
+cell_map = None
 if not os.path.isfile(os.getenv("PWD")+f'/{structurename}_InputKMC.dat'):
     cell_map, rank_map, wall_map, lenx, leny, lenz = io.dolfin2mulskips(f'{structurename}_InputKMC.dat', \
-        mpclass, regions, mesh, subdomains, \
+            mpclass, regions, mesh, subdomains, z_reverse=False, \
         regionsfilename=f'{structurename}_KMCregions', return_box_size=True)
 else:
     print("Found DAT input file for MulSKIPS in current folder...")
@@ -157,7 +158,7 @@ PPS: dolfin2mulskips() MUST be run before this to get cell_map and wall_map.
 #     sys.exit()
 # else:
 #     subdomains = io.mulskips2dolfin(f'{structurename}_AfterKMC.dat', mpclass, mesh, subdomains, regions, \
-#         cell_map, rank_map, wall_map, pvdfilename=f'{structurename}_Mesh_AfterKMC', LA=False)
+#         cell_map, rank_map, wall_map, pvdfilename=f'{structurename}_Mesh_AfterKMC', LA=False, z_reverse=False)
 #     # Write dolfin mesh to msh format. 
 #     io.dolfin2msh(structurename+'.msh', structurename+'_final.msh', \
 #         mesh, subdomains, boundaries)

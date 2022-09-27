@@ -83,6 +83,7 @@ Returns also the box size to be used in MulSKIPS.
 NB: since this takes time, recycle existing DAT file in the current directory
 """
 
+cell_map = None
 if not os.path.isfile(os.getenv("PWD")+f'/{structurename}_InputKMC.dat'):
     cell_map, rank_map, wall_map, lenx, leny, lenz = io.dolfin2mulskips(f'{structurename}_InputKMC.dat', \
         mpclass, regions, mesh, subdomains, z_reverse=False, \
