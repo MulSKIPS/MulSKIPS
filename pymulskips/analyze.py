@@ -651,9 +651,9 @@ def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None):
     np.savetxt(newfile, np.c_[spec_final, xyz_final], fmt='%s', 
         header=str(len(spec_final))+"\n"+head[-1], comments='')
 
-    # Write output XYZ file ready to be used in DEP3D
+    # Write output XYZ file ready to be used in DEP3D (micron units)
     if DEP3Dfile is not None:
-        np.savetxt(DEP3Dfile, xyz_final, fmt='%.8f')
+        np.savetxt(DEP3Dfile, xyz_final*1e-3, fmt='%.8f', comments='', header=str(len(xyz_final)))
 
     return
 
