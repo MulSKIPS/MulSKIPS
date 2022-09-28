@@ -90,7 +90,7 @@ Returns also the box size to be used in MulSKIPS.
 NB: since this takes time, recycle existing DAT file in the current directory
 """
 
-cell_map = None
+cell_map = np.array([])
 if not os.path.isfile(os.getenv("PWD")+f'/{structurename}_InputKMC.dat'):
     cell_map, rank_map, wall_map, lenx, leny, lenz = io.dolfin2mulskips(f'{structurename}_InputKMC.dat', \
             mpclass, regions, mesh, subdomains, z_reverse=False, \
@@ -153,7 +153,7 @@ a finer mesh in the gas region should be set in the initial MSH file.
 PPS: dolfin2mulskips() MUST be run before this to get cell_map and wall_map.
 """
 
-# if cell_map == None:
+# if not np.any(cell_map):
 #     print('WARNING: dolfin2mulskips() MUST be executed before mulskips2dolfin() to get cell_map and wall_map variables.')
 #     sys.exit()
 # else:
