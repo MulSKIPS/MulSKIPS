@@ -11,6 +11,13 @@ import cashocs
 print(f'cashocs v{cashocs.__version__}')
 
 
+# Set the path of MulSKIPS source code, and test if it exists.
+execpath = '/your_MulSKIPS_directory/mulskips-source'
+if not os.path.exists(execpath):
+    print(f"Error in run.py, the path of mulskips-source folder: {execpath} does not exist.")
+    sys.exit(1)
+
+
 """ 
 Load mesh and import it in Dolfin
 """
@@ -101,7 +108,6 @@ Then runs the MulSKIPS simulation.
 All results will be in rundirname.
 """
 
-execpath = '/your_MulSKIPS_directory/mulskips-source' # path of MulSKIPS source code 
 setuprun.setup_mulskips_src(execpath, lenx, leny, lenz) # it will rerecompile if needed
 rundirname = 'kmc_regions_' + '_'.join([str(x) for x in regions.values()])
 Nout = 10 # number of outputs
