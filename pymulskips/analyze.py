@@ -576,7 +576,7 @@ def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minfr
         return coverage_ave
 
 
-def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None):
+def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, exclude=[]):
     
     if not what in ['surface', 'coverage', 'surface+coverage']:
         print("ERROR: what should one of the following: \n'surface', 'coverage', 'surface+coverage'")
@@ -644,6 +644,11 @@ def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None):
         spec_final = np.delete(spec, toremove, axis=0)
 
     print(f'Number of {what} atoms: ', len(xyz_final))
+
+    # Exclude atoms if needed
+    if len(exclude) > 0: # zero-based
+        xyz_final = np.delete(xyz_final, exclude, axis=0)
+        spec_final = np.delete(spec_final, exclude, axis=0)
 
     # Write output XYZ file just to visualize
     with open(xyzfile) as fin:
