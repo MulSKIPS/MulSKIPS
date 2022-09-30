@@ -61,7 +61,7 @@ class PVD():
             self.mass = self.M_Si + self.M_C # [kg/mol]
             self.rho = 3210 # kg/m^3    
             self.a0 = pow(4*self.mass/self.NA/self.rho,1.0/3.0) # [m] side of the cubic conventional cell of 3C-SiC containing four Si-C dimers
-            self.KMC_sf = 4.63/12.0   # KMC Super-Lattice parameter (angstrom)
+            self.KMC_sf = 4.36/12.0   # KMC Super-Lattice parameter (angstrom)
         elif self.substrate == 'Si': 
             self.listcry = ['Si']
             self.mass = self.M_Si # [kg/mol]
@@ -407,7 +407,7 @@ class CVD():
             self.mass = self.M_Si + self.M_C # [kg/mol]
             self.rho = 3210 # kg/m^3    
             self.a0 = pow(4*self.mass/self.NA/self.rho,1.0/3.0) # [m] side of the cubic conventional cell of 3C-SiC containing four Si-C dimers
-            self.KMC_sf = 4.63/12.0   # KMC Super-Lattice parameter (angstrom)
+            self.KMC_sf = 4.36/12.0   # KMC Super-Lattice parameter (angstrom)
         elif self.substrate == 'Si': 
             self.listcry = ['Si']
             self.mass = self.M_Si # [kg/mol]
