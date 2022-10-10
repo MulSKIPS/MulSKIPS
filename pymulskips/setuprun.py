@@ -534,6 +534,7 @@ def setup_mulskips_src(execpath, lenx, leny, lenz):
         if not endok: 
             print('ERROR: Something went wrong during the compilation of MulSKIPS.')
             print('Further details in {}/make.log'.format(execpath))
+            sys.exit()
     else:
         print('ERROR: Pattern not found in '+execpath+'/modules/defsystem.f')
         sys.exit()
