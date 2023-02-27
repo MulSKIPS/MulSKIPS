@@ -667,9 +667,12 @@ def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, 
         for ii in range(3):
             xyz_final[:,ii] += xyz[:,ii].min()*10 # Ang
         print('Writing DEP3D file after shifting coordinates onto initial mesh')
-        np.savetxt(newfile+"micron.xyz", np.c_[spec_final, xyz_final*1e-4], fmt='%s', 
-            header=str(len(spec_final))+"\n"+head[-1].strip('\n'), comments='')
         np.savetxt(DEP3Dfile, xyz_final*1e-4, fmt='%.8f', comments='', header=str(len(xyz_final)))
+
+        # import the xyz below in paraview together with *_KMCregions* pvd file (both in nm!) 
+        cell = np.array(head[-1].strip('\n').split()[1:]).astype(np.float32) # Ang
+        np.savetxt(newfile+"aligned.xyz", np.c_[spec_final, (xyz_final*0.1).astype(np.float32)], fmt='%s', 
+            header=str(len(spec_final))+"\nperiodic "+' '.join((cell*0.1).astype(str)), comments='')
 
     return
 
