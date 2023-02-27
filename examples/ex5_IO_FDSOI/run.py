@@ -146,8 +146,7 @@ what = 'surface+coverage'
 DEP3Dfile = rundir+f'/I000000{Niter}.{what}.DEP3D.xyz'
 newfile = rundir+f'/I000000{Niter}.{what}.xyz'
 alat_cubic = mpclass.KMC_sf*12
-analyze.export_xyz(xyzfile, newfile, alat=alat_cubic, what=what, DEP3Dfile=DEP3Dfile)
-
+analyze.export_xyz(xyzfile, newfile, alat=alat_cubic, what=what, DEP3Dfile=DEP3Dfile, mesh=mesh)
 
 
 ### OPTIONAL 

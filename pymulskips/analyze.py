@@ -576,11 +576,16 @@ def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minfr
         return coverage_ave
 
 
-def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, exclude=[]):
+def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, mesh=None, exclude=[]):
     
     if not what in ['surface', 'coverage', 'surface+coverage']:
         print("ERROR: what should one of the following: \n'surface', 'coverage', 'surface+coverage'")
         sys.exit() 
+
+    if DEP3Dfile is not None:
+        if mesh is None:
+            print('ERROR: missing argument for Dolfin mesh in export_xyz()')
+            sys.exit()
 
     # Read MulSKIPS output
     spec, x, y, z = np.loadtxt(xyzfile, skiprows=2, unpack=True,
@@ -654,10 +659,16 @@ def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, 
     with open(xyzfile) as fin:
         head = [next(fin) for x in range(2)]
     np.savetxt(newfile, np.c_[spec_final, xyz_final], fmt='%s', 
-        header=str(len(spec_final))+"\n"+head[-1], comments='')
+        header=str(len(spec_final))+"\n"+head[-1].strip('\n'), comments='')
 
     # Write output XYZ file ready to be used in DEP3D (micron units)
     if DEP3Dfile is not None:
+        xyz = mesh.coordinates() # nm
+        for ii in range(3):
+            xyz_final[:,ii] += xyz[:,ii].min()*10 # Ang
+        print('Writing DEP3D file after shifting coordinates onto initial mesh')
+        np.savetxt(newfile+"micron.xyz", np.c_[spec_final, xyz_final*1e-4], fmt='%s', 
+            header=str(len(spec_final))+"\n"+head[-1].strip('\n'), comments='')
         np.savetxt(DEP3Dfile, xyz_final*1e-4, fmt='%.8f', comments='', header=str(len(xyz_final)))
 
     return

@@ -38,10 +38,10 @@
        CHARACTER(Len=2)  :: Homogeneous ! T or F (for LA)
        CHARACTER(Len=4)  :: ExitStrategy
 
-       CHARACTER(Len=200) :: cadfilename
-       CHARACTER(Len=200) :: tempfilename
-       CHARACTER(Len=200) :: coofilename
-       CHARACTER(Len=200) :: restartfilename
+       CHARACTER(Len=2000) :: cadfilename
+       CHARACTER(Len=2000) :: tempfilename
+       CHARACTER(Len=2000) :: coofilename
+       CHARACTER(Len=2000) :: restartfilename
 
       END MODULE Definitions
 
