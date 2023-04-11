@@ -1,0 +1,102 @@
+LA v2.0 release notes
+Gaetano Calogero
+
+>>>>>>>>>>>> WARNING
+This version of the source code will soon be merged with the main mulskips-source code for CVD-PVD simulations.
+<<<<<<<<<<<<
+
+
+*** SOCKETS
+Integration of mulskips with f2py to enable defects and no disk-involving communications between fortran and python. Enormous efficiency boost.  
+
+** Main updates in mulskips-source:
+
+* added f and c files with routines enabling f2py 
+(from https://github.com/b-fg/f2py-sockets/) 
+
+* initial/SetCAD.f
+- SetCAD() now has the array a as input, containing 1 (for solid) or 10 (for walls) or 0 (for air).
+- if cadfilename in start.dat is None then setup geom using sockets, otherwise use old disk communication through LattGeo.dat
+- NB: 1+z should be used when setting Id = a(1+z, 1+x+LenX*y) within the loop for z=4,LenZ-5.
+
+* initial/SetT.f
+- SetT() now has the array b as input, containing fenics computed temperature
+
+* inpout/WriteMolMolSource.f
+- Fixed formats of diff etc...(maybe put it in main.f directly...)
+
+* main.f
+- whole KMC loop (Iter) now nested inside an infinite while loop (LA_counter), with stopping signal sent by python
+- initialized 3 arrays of dimension LenZ,LenX*LenY: a (for geom), b (for temp) and c (for phases/ coordinations of full sites and 10 for walls), initialized to 0
+- first KMC loop starts only after having received geom and temperature arrays from python 
+- When LA_counter=0, reads start.dat, sets up geom and temp, then starts first KMC loop up to MaxTime. 
+- These variables are initialized only once at LA_counter=0:
+       LattCoo=0
+       LattInd=0
+       counter=0
+       NumAtoms=0
+       NumVoids=0
+       NumAdAtom=0
+       NumAdAtomOcc=0
+       CountCrystal=0
+       CountCov=0
+These other ones instead are reset at every LA_counter iteration:
+       Time=0.
+       Iter=1
+       IterOut=0
+       framecounter=0
+- control flags are used to manage the sockets communication:
+geoisinit, fieldisinit, hasdata
+- After every complete KMC cycle up to MaxTime,  
+- For LA_counter>0 only updates temperature.
+- RESETTING c=0 before writing Coo to phases file is CRUCIAL to correctly update solids every LA iteration
+
+
+
+** Main updates in pymulskips:
+
+(TO DO: add KMC box size as argument of run_mulskips() in pymulskips. This routine should also compile mulskips before launching it)
+
+
+
+** Main updates in script to launch LA simulation:
+- no more air=wall. Enabled regrowth above initial surface level (air=20, walls=10, evolving=1), in conjunction with the introduction of stopping criterion based on retrieval of the number of initial solid sites.
+- port number is set in script for usage with sockets (right after framework flag). That's necessary to run multiple calculations at once...not nice, but that's how it works.
+
+
+TO DO:
+- add framework variable as the second flag in start.dat file, which will direct mulskips towards the usual code or towards the sockets code (or the silicide one). This routine should only read the first line in start.dat and then immediately call the right code  
+- make sure non-LA-related stuff in main_sockets is also contained within usual main 
+- the count of NumOcc should already include all atoms around vacancies, because they are MCparticles so they are within NumAdAtomsOcc 
+
+
+
+*** SiGe
+* Added SetSiGeX initialization file for allocating random alloy 
+* Atom fractions tracking is needed, so that xGeliquid can be updated online during the simulations, which is needed to update the probabilities of melting/solidification, and therefore enable segregation. 
+The following new variables were thus added:
+NumAtoms --> bulk (coor=4)
+NumAdAtom --> MC particles (both empty or full)
+NumAdAtomOcc --> MC particles (only full!)
+NumOcc0 --> NumAtoms + NumAdAtomOcc (before nucleation! threshold for stop)
+NumOcc1 --> NumAtoms + NumAdAtomOcc (after nucleation, just informative)
+NumOcc --> NumAtoms + NumAdAtomOcc (current control variable)
+CountCrystal(3) --> Number of sites occupied with certain crystal species
+CountCov(3) --> Number of sites occupied with certain coverage species
+
+* initial/SetCAD.f:
+- Now we count NumAdAtomOcc down where probabilities are set and ddMC is called
+
+* main.f
+- xGe solid is evaluated in a differential fashion (using CountCrystal-CountCrystal in the previous iter): it will adjust for the first few KMC iterations but it will rapidly converge to the value expected from the xGe liquid set in the calibration (or on-the-run during the LA simulation)
+- NEW STOPPING CRITERION: IF(NumOcc.GT.NumOcc0) stop
+
+* mcevents/deposition.f & mcevents/evaporation.f
+- NumAdAtomOcc is updated whenever needed
+- ListCrystal passed to SetCAD, so that it can initialize SiGe as well.
+- count NumOcc0 also in SetSiGeX.f
+
+TO DO:
+- need to track NumAdAtomOcc in ALL the initialization files! (now only in SetCAD)
+- need to add CountCrystal in ALL  the initialization files (now only in SetSiGex, SetSi and SetSiC3C)
+

@@ -1,6 +1,6 @@
 ### USAGE
 
-- Make sure you installed all the dependencies below
+- Make sure you installed all the dependencies (see below)
 - Make sure you copied the pymulskips directory in this folder, or added it to your PYTHONPATH
 - Make sure you updated the "execpath" variable in run.py with your mulskips-source directory FULL path
 - Use the following command:
@@ -24,16 +24,15 @@ BUT keep them in the folder to avoid repeating the slow (a couple of hours on a 
 
 ### DEPENDENCIES
 
-Tested only for Python 3.8.10 using Ubuntu.
-The following libraries are required:
-- dolfin (2019.2.0.dev0)
-- cantera (2.6.0a4)
-- cashocs (>= 1.4.0)
+This example was tested for Python 3.8.10 using Ubuntu.
+
+The libraries in pymulskips/requirements_aptdolfin.txt should be used with dolfin 2019.2.0.dev0 version.
+
+The libraries in pymulskips/requirements_condadolfin.txt should be used with dolfin installed through CONDA.
 
 The versions indicated are the only ones tested. 
-Please feel free to try some newest ones and report an issue if something does not work.
 
-NB: Conda installation of libraries WAS NOT TESTED.
+Please feel free to try some newest ones and report an issue if something does not work.
 
 - To install FEniCS on Unix system (tested also on WSL2 for Windows 10/11, with Ubuntu 20.04):
 

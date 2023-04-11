@@ -211,6 +211,8 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
                     homoflag = 'F'
                 elif initialState=='tripleSF':
                     homoflag = 'D'
+                elif initialState=='stripe':
+                    homoflag = 'R'
                 print('Model homogeneous nucleation: ', homoflag)
 
                 # Generation of the evaporation energetics
@@ -306,7 +308,7 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
             file.write("{} ! errf param Tflex \n".format(' '.join([str(x) for x in mp.calibration_params['Tflex']])))
             file.write("{:.15f}".format(LenVac) + " ! LenVac -> Top air thickness in Ang" + "\n")
             file.write("{:.15f}".format(LenNuc) + " ! LenNuc -> Nucleus radius in Ang" + "\n")
-            file.write(homoflag + " ! Initial Nucleation State [homogeneous, inhomogeneous, tripleSF] " + "\n")
+            file.write(homoflag + " ! Initial Nucleation State [homogeneous, inhomogeneous, tripleSF, stripe] " + "\n")
             if initialState=='tripleSF':
                 Sys_size=' '.join([str(s) for s in Seed_box])
                 file.write(Sys_size+" ! Len1 Len2 Len3 Len4 Len5 for configuring a triple SF" + "\n")
@@ -316,8 +318,8 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
         
         if mp.listcryZ == [14, 32]: # SiGe 
             file.write(str(mp.calibration_params['X0'][1]) + " ! Ge fraction in substrate " + "\n")
-            if Simulation == 'LA':
-                file.write("{:.15f}".format(LenSiGe) + " ! LenSiGe -> SiGe thickness in Ang" + "\n")
+            file.write("{:.15f}".format(LenSiGe) + " ! LenSiGe -> SiGe thickness in Ang" + "\n")
+            # if Simulation == 'LA':
             #     file.write(str(mp.calibration_params['X'][1]) + " ! Ge fraction in liquid " + "\n")
 
         file.write(str(PtransZig)+" ! PtransZig" +  "\n")
@@ -489,7 +491,7 @@ def compile_mulskips(execpath):
     return endok
 
 
-def setup_mulskips_src(execpath, lenx, leny, lenz):
+def setup_mulskips_src(execpath, lenx, leny, lenz, socketport=0):
     
     from tempfile import NamedTemporaryFile
     defsystemfile = execpath+'/modules/defsystem.f'
@@ -508,35 +510,39 @@ def setup_mulskips_src(execpath, lenx, leny, lenz):
             fout.write(line.encode('utf8'))
         os.rename(fout.name, defsystemfile)
     # Delete tmp file...
-    
-    # if recompile:
-    #     print('Re-compiling MulSKIPS due to update of box size.')
-    #     print('Old box size: {} '.format(oldstring[29:-1]))
-    #     print('New box size: LenX={}, LenY={}, LenZ={}'.format(lenx, leny, lenz))
-    #     endok = compile_mulskips(execpath=execpath)
-    #     if not endok: 
-    #         print('ERROR: Something went wrong during the compilation of MulSKIPS.')
-    #         print('Further details in {}/make.log'.format(execpath))
-    # elif boxok:
-    #     print('Box is ok in MulSKIPS src. No need for recompiling.')
-    # else:
-    #     print('ERROR: Pattern not found in '+execpath+'/modules/defsystem.f')
-    #     sys.exit()
-
-    if boxupdate or boxok:
-        if boxupdate:
-            print('Compiling MulSKIPS with possible updated of box size.')
-            print('Old box size: {} '.format(oldstring[29:-1]))
-            print('New box size: LenX={}, LenY={}, LenZ={}'.format(lenx, leny, lenz))
-        else:
-            print('Box in MulSKIPS is ok.')
-        endok = compile_mulskips(execpath=execpath)
-        if not endok: 
-            print('ERROR: Something went wrong during the compilation of MulSKIPS.')
-            print('Further details in {}/make.log'.format(execpath))
-            sys.exit()
+    if not (boxok or boxupdate):
+        print('ERROR: Pattern not found in '+defsystemfile)
+        sys.exit()
     else:
-        print('ERROR: Pattern not found in '+execpath+'/modules/defsystem.f')
+        print('Compiling MulSKIPS with box size: {} x {} x {}'.format(lenx, leny, lenz))
+
+    if socketport > 0:
+        mainfile = execpath+'/main.f'
+        pattern = "port ="
+        newstring = "      port = {}\n".format(socketport)
+        portupdate, portok = False, False
+        with open(mainfile) as fin, NamedTemporaryFile(dir=execpath, delete=False) as fout:
+            for line in fin:
+                if pattern in line:
+                    oldstring = line
+                    if line.startswith(newstring): 
+                        portok = True
+                    else:
+                        line = newstring
+                        portupdate = True
+                fout.write(line.encode('utf8'))
+            os.rename(fout.name, mainfile)
+        # Delete tmp file...
+        if not (portok or portupdate):
+            print('ERROR: Pattern not found in '+mainfile)
+            sys.exit()
+        else:
+            print('Compiling MulSKIPS with socket port: {}'.format(socketport))
+    
+    endok = compile_mulskips(execpath=execpath)
+    if not endok: 
+        print('ERROR: Something went wrong during the compilation of MulSKIPS.')
+        print('Further details in {}/make.log'.format(execpath))
         sys.exit()
 
     return

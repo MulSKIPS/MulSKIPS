@@ -576,7 +576,7 @@ def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minfr
         return coverage_ave
 
 
-def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, mesh=None, exclude=[]):
+def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, mesh=None, voff=[0,0,0], reverse_z=False, exclude=[]):
     
     if not what in ['surface', 'coverage', 'surface+coverage']:
         print("ERROR: what should one of the following: \n'surface', 'coverage', 'surface+coverage'")
@@ -611,6 +611,7 @@ def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, 
     Cllist = (spec == 'Cl').nonzero()[0]
     Olist = (spec == 'O').nonzero()[0]
     Silist = (spec == 'Si').nonzero()[0]
+    Gelist = (spec == 'Ge').nonzero()[0]
 
     if what == 'coverage': 
     # Write only coordinates of coverage atoms (coincides with surface for high coverages)
@@ -663,9 +664,14 @@ def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, 
 
     # Write output XYZ file ready to be used in DEP3D (micron units)
     if DEP3Dfile is not None:
+
+        if reverse_z: # if LA then I need to reverse z, because MulKSIPS has surface facing positive z, while mesh is the other way around 
+            xyz_final = xyz_final*[1,1,-1]
+
         xyz = mesh.coordinates() # nm
         for ii in range(3):
-            xyz_final[:,ii] += xyz[:,ii].min()*10 # Ang
+            xyz_final[:,ii] += (xyz[:,ii].min() + voff[ii]) * 10 # Ang
+            
         print('Writing DEP3D file after shifting coordinates onto initial mesh')
         np.savetxt(DEP3Dfile, xyz_final*1e-4, fmt='%.8f', comments='', header=str(len(xyz_final)))
 

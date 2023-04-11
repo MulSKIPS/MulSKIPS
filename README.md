@@ -17,16 +17,21 @@ A successful compilation will generate a "mulskips.e" executable file in the /yo
 - To run a simulation, go to your working directory, use pymulskips routines to generate a "start.dat" file with all simulation parameters, then simply call  /your_MulSKIPS_directory/mulskips.e  
 - To use the pymulskips routines in your python script, simply copy the directory /your_MulSKIPS_directory/pymulskips/ into your working directory.
 In alternative, you can add /your_MulSKIPS_directory/pymulskips/ to your PYTHONPATH environment variable.
-- The pymulskips module needs a lot of dependencies. You can install them manually or running the following command:
+- The pymulskips module needs a lot of dependencies. 
+The required versions of these dependencies may vary with the installed version of dolfin.
+If you installed dolfin through CONDA, please note that the following dependencies were successfully tested (install them using the following command):
 ```
-pip3 install -r /your_MulSKIPS_directory/pymulskips/requirements.txt
+pip3 install -r /your_MulSKIPS_directory/pymulskips/requirements_condadolfin.txt
+```
+If you installed dolfin through apt, please note that dolfin 2019.2.0.dev0 version has been successfully tested using the following versions for the dependencies (install them using the following command):
+```
+pip3 install -r /your_MulSKIPS_directory/pymulskips/requirements_aptdolfin.txt
 ```
 - For examples of usage, see /your_MulSKIPS_directory/examples/.
 
 
 
-
-### MORE DOCUMENTATION and EXAMPLE on PVD, CVD, LASER ANNEALING processes for various materials (Si, SiC, SiGe, ...) will be uploaded soon, so...STAY TUNED!
+### MORE DOCUMENTATION, TUTORIALS and EXAMPLES will be uploaded soon, so...STAY TUNED!
 
 
 ### REFERENCES
@@ -39,6 +44,9 @@ in group iv compound semiconductors" Phys. Status Solidi A 216, 1800597 (2019)].
 S. Kerdilès, A. Sciuto and A. La Magna, "Multiscale modeling of ultrafast melting
 phenomena", npj Computational Materials 8, 36 (2022)]
 
+[G. Calogero, D. Raciti, D. Ricciarelli, P. Acosta-Alba, F. Cristiano, R. Daubriac, 
+R. Demoulin, I. Deretzis, G. Fisicaro, J.-M. Hartmann, S. Kerdilés, A. La Magna, 
+"Multiscale modelling of ultrafast melting and structural disorder in group IV alloys" (submitted)]
 
 <!--
 block comment

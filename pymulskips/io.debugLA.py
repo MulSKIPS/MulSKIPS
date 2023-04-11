@@ -647,31 +647,32 @@ def send_geom_to_mulskips(regions, mesh, V, dofmap, mv, comm,
     # rank_map = rank_map_flat.reshape((lenz,leny*lenx))
     # lattcell_map = lattcell_map_flat.reshape((lenz,leny*lenx))
 
-    # the lines above are slightly faster but give a slightly different LattGeo.dat 
-    iz = 0
-    if(MPI.rank(comm)==0): t1 = time.time()
-    while iz < lenz :
-      iy = 0
-      if(iz%10 == 0 and MPI.rank(comm)==0):
-        print('\r', 'Iter {:7d} /{:7d} \t ETA x 10: {:.3f} s'.format(iz, lenz, time.time()-t1), end='')
-        t1 = time.time()
-      while iy < leny :
-        ix = 0
-        while ix < lenx :
-          j=ix+iy*lenx
-          point_latt=Point(xBox0+alat*float(ix), yBox0+alat*float(iy), zBox0+alat*float(iz))
-          val = -1
-          cell_index = bbox_tree.compute_first_entity_collision(point_latt) # it gives infty if out of thread subdomain
-          if cell_index < ncells:
-            val = regions[mv[cell_index]]
-            cell_map[iz][j] = cell_index
-            rank_map[iz][j] = MPI.rank(comm)
-          MPI.barrier(comm)
-          val = int(MPI.max(comm, val))
-          lattcell_map[iz][j] = val
-          ix+=1
-        iy+=1
-      iz+=1
+    # the lines above are slightly faster but give a slightly different LattGeo.dat    
+    # <------------- DEBUG
+    # iz = 0
+    # if(MPI.rank(comm)==0): t1 = time.time()
+    # while iz < lenz :
+    #   iy = 0
+    #   if(iz%10 == 0 and MPI.rank(comm)==0):
+    #     print('\r', 'Iter {:7d} /{:7d} \t ETA x 10: {:.3f} s'.format(iz, lenz, time.time()-t1), end='')
+    #     t1 = time.time()
+    #   while iy < leny :
+    #     ix = 0
+    #     while ix < lenx :
+    #       j=ix+iy*lenx
+    #       point_latt=Point(xBox0+alat*float(ix), yBox0+alat*float(iy), zBox0+alat*float(iz))
+    #       val = -1
+    #       cell_index = bbox_tree.compute_first_entity_collision(point_latt) # it gives infty if out of thread subdomain
+    #       if cell_index < ncells:
+    #         val = regions[mv[cell_index]]
+    #         cell_map[iz][j] = cell_index
+    #         rank_map[iz][j] = MPI.rank(comm)
+    #       MPI.barrier(comm)
+    #       val = int(MPI.max(comm, val))
+    #       lattcell_map[iz][j] = val
+    #       ix+=1
+    #     iy+=1
+    #   iz+=1
     if(MPI.rank(comm)==0):print('')
     MPI.barrier(comm)
 
@@ -680,6 +681,9 @@ def send_geom_to_mulskips(regions, mesh, V, dofmap, mv, comm,
 
     
     if driver != None:
+
+        lattcell_map += 1    # <------------- DEBUG
+
         # Send lattcell_map array to MulSKIPS via socket
         A = lattcell_map.astype(np.int32) # np.int32 is fundamental!  
         A = A[::-1, ...]   # remember to reverse order along z before passing it to mulskips! Fenics is upside down
@@ -886,6 +890,9 @@ def send_T_for_mulskips(tstep, T_curr,
 
     if(MPI.rank(comm)==0):
         if driver != None:
+
+            value_latt += 1700   #<----------- DEBUG
+
             # Send temperature map to MulSKIPS via socket                
             B = value_latt.round().astype(np.int32) # np.int32 is fundamental!  
             B = B[::-1, ...]   # remember to reverse order along z before passing it to mulskips! Fenics is upside down
