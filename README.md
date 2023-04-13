@@ -27,8 +27,10 @@ If you installed dolfin through apt, please note that dolfin 2019.2.0.dev0 versi
 ```
 pip3 install -r /your_MulSKIPS_directory/pymulskips/requirements_aptdolfin.txt
 ```
-- For examples of usage, see /your_MulSKIPS_directory/examples/.
 
+## Tutorials and examples ##
+
+Check [here](https://github.com/MulSKIPS/MulSKIPS/tree/main/examples) for some examples of usage. 
 
 <!--
 ## Tutorials and examples ##
@@ -37,24 +39,20 @@ The easiest way to get started is to follow the tutorials [here](https://mulskip
 
 ## Documentation ##
 
-Please find documentation here:
-
-- [Documentation](https://mulskips.readthedocs.io/en/latest/index.html)
+Please find documentation [here](https://mulskips.readthedocs.io/en/latest/index.html).
 
 
 ## References ##
 
-[A. La Magna, A. Alberti, E. Barbagiovanni, C. Bongiorno, M. Cascio, 
-I. Deretzis, F. La Via, and E. Smecca, "Simulation of the growth kinetics
-in group iv compound semiconductors" Phys. Status Solidi A 216, 1800597 (2019)].
+[1] A. La Magna, A. Alberti, E. Barbagiovanni, C. Bongiorno, M. Cascio, I. Deretzis, F. La Via, and E. Smecca, "Simulation of the Growth Kinetics in Group IV Compound Semiconductors", physica status solidi (a) vol. 216, no. 10, p. 1800597, 2019, doi: 10.1002/pssa.201800597
 
-[G. Calogero, D. Raciti, P. Acosta-Alba, F. Cristiano, I. Deretzis, G. Fisicaro, K. Huet,
-S. Kerdilès, A. Sciuto and A. La Magna, "Multiscale modeling of ultrafast melting
-phenomena", npj Computational Materials 8, 36 (2022)]
+[2] G. Fisicaro, C. Bongiorno, I. Deretzis, F. Giannazzo, F. La Via, F. Roccaforte, M. Zielinski, M. Zimbone, A. La Magna, "Genesis and Evolution of Extended Defects: The Role of Evolving Interface Instabilities in Cubic SiC", Applied Physics Reviews vol. 7, no. 2, p. 021402, Apr. 2020, doi: 10.1063/1.5132300
 
-[G. Calogero, D. Raciti, D. Ricciarelli, P. Acosta-Alba, F. Cristiano, R. Daubriac, 
-R. Demoulin, I. Deretzis, G. Fisicaro, J.-M. Hartmann, S. Kerdilés, A. La Magna, 
-"Multiscale modelling of ultrafast melting and structural disorder in group IV alloys" (submitted)]
+[3] https://hq.imm.cnr.it/content/super-lattice-kinetic-monte-carlo-method-simulate-cvd-epitaxy-si-based-materials
+
+[4] G. Calogero, D. Raciti, P. Acosta-Alba, F. Cristiano, I. Deretzis, G. Fisicaro, K. Huet, S. Kerdilès, A. Sciuto and A. La Magna, "Multiscale modeling of ultrafast melting phenomena", npj Computational Materials 8, 36 (2022), doi: 10.1038/s41524-022-00720-y
+
+[5] G. Calogero, D. Raciti, D. Ricciarelli, P. Acosta-Alba, F. Cristiano, R. Daubriac, R. Demoulin, I. Deretzis, G. Fisicaro, J.-M. Hartmann, S. Kerdilés, A. La Magna, "Multiscale modelling of ultrafast melting and structural disorder in group IV alloys" (submitted)
 
 <!--
 block comment
