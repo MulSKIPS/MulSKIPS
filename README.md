@@ -1,7 +1,7 @@
-### MulSKIPS
+## [MulSKIPS](https://mulskips.readthedocs.io/en/latest/index.html) ##
 A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resolution the kinetics of processes (e.g., PVD, CVD, laser annealing) involving elements, alloys and compounds characterized by the sp3 bond symmetry
 
-### INSTALLATION 
+## Installation ##
 
 - To compile MulSKIPS use the following commands:
 
@@ -30,11 +30,19 @@ pip3 install -r /your_MulSKIPS_directory/pymulskips/requirements_aptdolfin.txt
 - For examples of usage, see /your_MulSKIPS_directory/examples/.
 
 
+<!--
+## Tutorials and examples ##
+The easiest way to get started is to follow the tutorials [here](https://mulskips.readthedocs.io/en/latest/index.html).
+-->
 
-### MORE DOCUMENTATION, TUTORIALS and EXAMPLES will be uploaded soon, so...STAY TUNED!
+## Documentation ##
+
+Please find documentation here:
+
+- [Documentation](https://mulskips.readthedocs.io/en/latest/index.html)
 
 
-### REFERENCES
+## References ##
 
 [A. La Magna, A. Alberti, E. Barbagiovanni, C. Bongiorno, M. Cascio, 
 I. Deretzis, F. La Via, and E. Smecca, "Simulation of the growth kinetics

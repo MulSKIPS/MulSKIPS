@@ -1,6 +1,4 @@
 
-### -- work in progress --
-
 This folder contains different examples of simulations performed with MulSKIPS.
 
 Here is a list (more detailed Jupyter Notebooks will be released soon):
@@ -13,4 +11,5 @@ Here is a list (more detailed Jupyter Notebooks will be released soon):
 - ex6. How to analyze the results of MulSKIPS 
 - ex7. How to setup a process calibration in MulSKIPS
 
-### -- work in progress ---
+
+Further TUTORIALS and EXAMPLES will be uploaded soon.
