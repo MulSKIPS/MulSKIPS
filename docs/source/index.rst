@@ -13,6 +13,8 @@ to build up MulSKIPS input files, to perform the calibration of input parameters
 to build input structures, and to analyse all MulSKIPS outputs.
 Such modules are supposed to enhance the MulSKIPS experience by high-level approach.
 
+MulSKIPS has its documentation hosted on Read the Docs.
+
 .. toctree::
    :maxdepth: 2
    :caption: Overview of MulSKIPS
