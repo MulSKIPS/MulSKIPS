@@ -7,7 +7,7 @@ MulSKIPS is available on GitHub_, from where it can be cloned or downloaded as a
 
 
 Install and run the code
-================
+========================
 
 To install MulSKIPS you just need to follow all instructions reported here_.
 
