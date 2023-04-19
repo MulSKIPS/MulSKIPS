@@ -32,7 +32,7 @@ version = '0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinxcontrib.bibtex']
-bibtex_bibfiles = ['mulskips_refs.bib']
+bibtex_bibfiles = ['refs.bib']
 
 
 # Add any paths that contain templates here, relative to this directory.
