@@ -38,4 +38,5 @@ Following we list all MulSKIPS functionalities:
 References
 ==========
 
-.. footbibliography::
+```{bibliography}
+```
