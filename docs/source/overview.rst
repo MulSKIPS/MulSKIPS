@@ -38,7 +38,4 @@ Following we list all MulSKIPS functionalities:
 References
 ==========
 
-.. bibliography:: mulskips_refs.bib
-   :list: enumerated
-   :style: rev_year
-   :labelprefix: U
+.. footbibliography::
