@@ -21,7 +21,7 @@
 !     Deposition SUBROUTINE
 !     it updates the systems's state after the deposition of an atom of the type IAtom
 !     the IndVoid points to a empty site which have one of its NN already filled
-      SUBROUTINE Deposition(IndVoid,IAtom) ! IAtom 1=01 Si 2=10 C
+      SUBROUTINE Deposition(IndVoid,IAtom) ! IAtom 1=001 Si 2=010 C 3=011 C
       USE DefDerType
       USE DefSystem
       USE Definitions

@@ -32,7 +32,7 @@
         INTEGER :: i,IndexEvent_Abs        
         
         IF(NCov.EQ.1)THEN
-          IndexEvent_Abs=5
+          IndexEvent_Abs=6
         ELSE IF(Ncov.GE.2)THEN
           DO i=1,NCov  ! loop over various segments
             IF(i.EQ.1)THEN
@@ -43,7 +43,7 @@
               pmax=PDepo+SUM(PtransAbs(:i,Coordination))
             END IF
             IF((Ptmp.GT.pmin).AND.(Ptmp.LE.pmax))THEN
-              IndexEvent_Abs = 4+i
+              IndexEvent_Abs = 5+i
 C               write(*,*)'Absorbing',IndexEvent_Abs
             END IF
           END DO
@@ -59,7 +59,7 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
       IMPLICIT NONE
       INTEGER Occ,OccN,NdiC,Coor,CoorNN,IndNN
       INTEGER Site(3),NextN(3,4),NextNN(3,4)
-      INTEGER i,j,Index_Event,SiOrC,NSiC,N_C,N_Si,N_wall,CovIndN         ! WALL added CovInd
+      INTEGER i,j,Index_Event,SiOrC,NSiC,N_C,N_Si,N_B,N_wall,CovIndN         ! WALL added CovInd
       INTEGER CovInd
       INTEGER IndexEvent_Abs
       REAL(8) Prob_Event
@@ -96,7 +96,7 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
           STOP
         END IF
         IF(Coor.LE.3)THEN
-          Index_Event = 4
+          Index_Event = 5
           iCov=0
           DO j=1,Ncov
 !            write(*,*)j, ListCov(j)
@@ -157,7 +157,7 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
              CoorNN=IBITS(LattCoo(NextN(1,1),NextN(2,1),NextN(3,1)),
      >                  PosCoor,LenCoor)
              IF(CoorNN.GE.2)THEN ! in the case Coor=1 the single first neighbor should have CoorNN>=2
-               PDep=PD(1,Coor)+PD(2,Coor)
+               PDep=PD(1,Coor)+PD(2,Coor)+PD(3,Coor)
                PAbs=SUM(PtransAbs(:,Coor)) ! for LA this will always be zero. Depo will always be selected
                Ptot=PDep+PAbs
 !               write(*,*)'Probs',Ptot,PD(1,Coor),PD(2,Coor),PAbs
@@ -166,8 +166,11 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
                  IF(Pcurr.LE.PD(1,Coor))THEN
 !                   write(*,*)'depositing Si',CoorNN
                    Index_Event = 1
+                 ELSE IF(Pcurr.GT.(PD(1,Coor)+PD(2,Coor)))THEN
+!                   write(*,*)'depositing B'
+                   Index_Event = 3                  
                  ELSE
-!                   write(*,*)'depositing C'
+!                   write(*,*)'depositing Ge'
                    Index_Event = 2
                  END IF
                ELSE  ! absorption
@@ -180,7 +183,7 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
                Prob_Event = 1.e-8                                          ! WALL TODO: might be decreased to e.g. 1e-20 to avoid Tree errors due to very small Ptrans... 
              END IF
           ELSE IF ((Coor.EQ.2).OR.(Coor.EQ.3))THEN
-             PDep=PD(1,Coor)+PD(2,Coor)
+             PDep=PD(1,Coor)+PD(2,Coor)+PD(3,Coor)
              PAbs=SUM(PtransAbs(:,Coor))  ! for LA this will always be zero. Depo will always be selected
              Ptot=PDep+PAbs
              Pcurr=random(idum)*Ptot
@@ -188,6 +191,9 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
                IF(Pcurr.LE.PD(1,Coor))THEN
 !                 write(*,*)'depositing Si'
                  Index_Event = 1
+               ELSE IF(Pcurr.GT.(PD(1,Coor)+PD(2,Coor)))THEN
+!                 write(*,*)'depositing B'
+                 Index_Event = 3          
                ELSE
 !                 write(*,*)'depositing C'
                  Index_Event = 2
@@ -209,7 +215,8 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
         ELSE ! Occ=1 Evaporation
           N_Si=0
           N_C =0
-          N_wall = 0                                                        ! WALL ! TODO: eventually there should be an array including N_Si, N_C, N_H, N_walls etc in case of more species. 
+          N_B =0
+          N_wall = 0                                                        ! WALL ! TODO: eventually there should be an array including N_Si, N_C, N_B, N_H, N_walls etc in case of more species. 
           covNN = 0  ! array of Len = Ncov
           !write(*,*)'Get Prob Site',Site,LattInd(Site(1),Site(2),Site(3))
           DO i=1,4
@@ -234,6 +241,7 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
      >                   ,NextN(3,i)),PosSiC,LenSiC)
                     IF(SiOrC.EQ.1)N_Si=N_Si+1
                     IF(SiOrC.EQ.2)N_C=N_C+1   ! When Ncrystal=1 this should always be zero, because Ind_Event will never be =2 (see above)
+                    IF(SiOrC.EQ.3)N_B=N_B+1   ! When Ncrystal=1 this should always be zero, because Ind_Event will never be =2 (see above)
 !              write(*,*)'Get Prob SiOrC',NextN(1:3,i),SiOrC
                   END IF
                 ELSE ! ripete la stessa cosa anche per CoorNN.EQ.4...per ora lasciamo così
@@ -249,6 +257,7 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
      >                   NextN(3,i)),PosSiC,LenSiC)
                     IF(SiOrC.EQ.1)N_Si=N_Si+1
                     IF(SiOrC.EQ.2)N_C=N_C+1
+                    IF(SiOrC.EQ.3)N_B=N_B+1
                   END IF
                 END IF
               ELSE                                                         ! WALL 
@@ -281,35 +290,35 @@ C               write(*,*)'Absorbing',IndexEvent_Abs
             END IF
           END DO
           covNNsum = SUM(covNN) ! in case there is no coverage atoms, covNNsum=0 and usual behaviour is retrieved. In case there is only H, covNNsum = covNN(1)
-          IF(N_Si+N_C+N_wall.NE.Coor)THEN                              ! note: Coor is not changed by coverage!
-             write(*,*)Coor,N_Si,N_C,N_wall,covNNsum               
-     >          ,'Get Prob Error N_Si+N_C+N_wall.NE.Coor'
+          IF(N_Si+N_C+N_B+N_wall.NE.Coor)THEN                              ! note: Coor is not changed by coverage!
+             write(*,*)Coor,N_Si,N_C,N_B,N_wall,covNNsum               
+     >          ,'Get Prob Error N_Si+N_C+N_B+N_wall.NE.Coor'
              write(*,*)Site,Occ,NSiC,CovInd,Coor,covNN
              STOP
           END IF
-          IF (N_Si+N_C+N_wall.GT.3)THEN                                ! note: Coor is not changed by coverage!
+          IF (N_Si+N_C+N_B+N_wall.GT.3)THEN                                ! note: Coor is not changed by coverage!
              Index_Event = 0
              Prob_Event = 0.d0
 !             write(*,*)Coor,'Get Prob Bulk Site'
-          ELSE IF(N_Si+N_C+N_wall.EQ.0)THEN                            ! note: Coor is not changed by coverage! An isolated Si should evaporate even if it has a coverage NN
-             Index_Event = 3
+          ELSE IF(N_Si+N_C+N_B+N_wall.EQ.0)THEN                            ! note: Coor is not changed by coverage! An isolated Si should evaporate even if it has a coverage NN
+             Index_Event = 4
              Prob_Event = 100000.*Tree(1)  ! it makes its evaporation a fast event
 !             write(*,*)Coor,'Get Prob Isolated Atom'
           ELSE
-! We'll need to fix the 4th arg in PE below if we want to include a third crystal species! We'll count NC1, NC2, NC3 instead of N_Si and N_C
-             Index_Event = 3                                           ! for now it works only with H or Cl. What if there are other species? Will every species be Hard coded? Should we define an effective probability scaling factor as an input array in start.dat?
+! We'll need to fix the 4th arg in PE below if we want to include more than 3 crystal species! 
+             Index_Event = 4                                           ! for now it works only with H or Cl. What if there are other species? Will every species be Hard coded? Should we define an effective probability scaling factor as an input array in start.dat?
              IF(NCov.EQ.1)THEN
-               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,0,covNN(1),0,0)    ! WALL: reduce probability if a NN is a wall. If more than 1 NN is wall, the effect sums up
+               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,N_B,covNN(1),0,0)    ! WALL: reduce probability if a NN is a wall. If more than 1 NN is wall, the effect sums up
              ELSE IF(NCov.EQ.2)THEN
-               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,0,covNN(1),
+               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,N_B,covNN(1),
      >                                                     covNN(2),0)    ! WALL: reduce probability if a NN is a wall. If more than 1 NN is wall, the effect sums up
              ELSE IF(NCov.EQ.3)THEN
-               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,0,covNN(1),
+               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,N_B,covNN(1),
      >                                                     covNN(2),
      >                                                     covNN(3))    ! WALL: reduce probability if a NN is a wall. If more than 1 NN is wall, the effect sums up
              ELSE
-               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,0,0,0,0)    ! WALL: reduce probability if a NN is a wall. If more than 1 NN is wall, the effect sums up
-!               write(*,*)NSiC,N_Si,N_C,NCov,N_wall,'Get Prob PE()'
+               Prob_Event = PE(NSiC,N_Si+N_wall,N_C,N_B,0,0,0)    ! WALL: reduce probability if a NN is a wall. If more than 1 NN is wall, the effect sums up
+!               write(*,*)NSiC,N_Si,N_C,N_B,NCov,N_wall,'Get Prob PE()'
              END IF             
           END IF
         END IF

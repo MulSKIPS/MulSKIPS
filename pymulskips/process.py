@@ -401,6 +401,32 @@ class CVD():
         self.M_B = ct.Element('B').weight*1e-3 #Kg/mol
         self.M_P = ct.Element('P').weight*1e-3 #Kg/mol
 
+
+        # Check calibration params
+        if calibration_params is None:
+            print('ERROR: Please provide calibration parameters dictionary...')
+            sys.exit()
+        if self.gas:
+            calibration_params_keys = ['Edep', 'Eev', 'Eabs', 'Edes', 
+                'deltaE', 'kevap_A', 'kevap_E', 'scalef', 'scalefcov']
+            if 'SiGe' in self.substrate:
+                calibration_params_keys.append('X0')
+        else:
+            calibration_params_keys = ['Edep', 'Eev', 'Eabs', 'Edes', 'deltaH', 'deltaCl', 
+                'Ereact_SiH4', 'Ereact_H2', 'k_Si_SiH4', 'k_H_SiH4', 'k_H_H2', 'scalef', 
+                'aads', 'bads', 's0', 'Ades', 'Aev', 'Bev', 'Adep']
+        for key in calibration_params_keys:
+            if key not in list(calibration_params.keys()):
+                print('  ERROR: please provide calibration parameter {} '.format(key))
+                sys.exit()
+        # for key, value in calibration_params.items():
+        #     if key not in calibration_params_keys:
+        #         print('  ERROR: please provide calibration parameter {} '.format(key))
+        #         sys.exit()
+        # Assign calibration params
+        self.calibration_params = copy.deepcopy(calibration_params)
+
+
         # Some constants related to the solid growing substrate
         if self.substrate == 'SiC-3C': 
             self.listcry = ['Si', 'C']
@@ -416,17 +442,41 @@ class CVD():
             self.KMC_sf = 5.43/12.0   # KMC Super-Lattice parameter (angstrom)
             self.Tm = 1688 # K # Melting
             self.Td = 640 # K # Debye #corrected by 0.6 to estimate SURFACE Td
-            if self.miller == 100:
-                self.at_density = 6.78e18 # atoms/m^2
-            elif self.miller == 110:
-                self.at_density = 9.59e18 # atoms/m^2
-            elif self.miller == 111:
-                self.at_density = 7.83e18 # atoms/m^2
-            else:
-                print('ERROR: Surface with Miller indices {} is not implemented'.format(self.miller))
+            # if self.miller == 100:
+            #     self.at_density = 6.78e18 # atoms/m^2
+            # elif self.miller == 110:
+            #     self.at_density = 9.59e18 # atoms/m^2
+            # elif self.miller == 111:
+            #     self.at_density = 7.83e18 # atoms/m^2
+            # else:
+            #     print('ERROR: Surface with Miller indices {} is not implemented'.format(self.miller))
+        elif self.substrate == 'SiGe_X':  # interpolations strictly valid for X in [0.0,0.4] and X=1
+            self.listcry = ['Si','Ge']
+            self.mass = 0.07263 * self.calibration_params['X0'][1] + 0.0280855 * (1.0 - self.calibration_params['X0'][1])  # [kg/mol]
+            self.rho = 2329 + 3493 * self.calibration_params['X0'][1] - 499 * pow(self.calibration_params['X0'][1],2)  # [kg/m^3]
+            self.a0 = pow(8*self.mass/self.NA/self.rho,1.0/3.0) # [m] lattice parameter for crystalline Si (diamond structure, 8 atoms per cell)
+            self.Tm = [1688, 1210]
+            #self.Tm = 1210 * self.calibration_params['X'][1] + 1688 * (1.0 - self.calibration_params['X'][1])  # K
+            #self.KMC_sf = (5.43 * (1.0 - self.calibration_params['X'][1]) + 5.66 * self.calibration_params['X'][1]) / 12.0  # KMC Super-Lattice parameter (angstrom)
+            self.KMC_sf = 5.43/12.0  # KMC Super-Lattice parameter (angstrom)
+            # NB: KMC_sf for strained SiGe is similar to Si...we need it to be fixed to Si anyways for LA where X is variable! 
+            # Then for melt depth we can use a weighted average depending on x (in turn evaluated as a func. of xyz at the end of the process) 
+        elif self.substrate == 'SiGe_X_B':  # interpolations strictly valid for X in [0.0,0.4] and X=1
+            self.listcry = ['Si','Ge', 'B']
+            self.mass = 0.07263 * self.calibration_params['X0'][1] + 0.0280855 * (1.0 - self.calibration_params['X0'][1])  # [kg/mol]
+            self.rho = 2329 + 3493 * self.calibration_params['X0'][1] - 499 * pow(self.calibration_params['X0'][1],2)  # [kg/m^3]
+            self.a0 = pow(8*self.mass/self.NA/self.rho,1.0/3.0) # [m] lattice parameter for crystalline Si (diamond structure, 8 atoms per cell)
+            self.Tm = [1688, 1210]
+            #self.Tm = 1210 * self.calibration_params['X'][1] + 1688 * (1.0 - self.calibration_params['X'][1])  # K
+            #self.KMC_sf = (5.43 * (1.0 - self.calibration_params['X'][1]) + 5.66 * self.calibration_params['X'][1]) / 12.0  # KMC Super-Lattice parameter (angstrom)
+            self.KMC_sf = 5.43/12.0  # KMC Super-Lattice parameter (angstrom)
+            # NB: KMC_sf for strained SiGe is similar to Si...we need it to be fixed to Si anyways for LA where X is variable! 
+            # Then for melt depth we can use a weighted average depending on x (in turn evaluated as a func. of xyz at the end of the process) 
+
         else:
             print('ERROR: Substrate {} is not implemented'.format(self.substrate))
             sys.exit()
+        print('lattice parameter for substrate:', self.a0)
         # Atomic numbers
         self.listcryZ = [ct.Element(el).atomic_number for el in self.listcry]
         # Below is an approiximated rho_surf. For Miller indices differientiation, we should include them for each face in the lines above 
@@ -444,10 +494,6 @@ class CVD():
             self.listcov = list(set(tmp)-set(self.listcry))
             self.listcovZ = [ct.Element(el).atomic_number for el in self.listcov]
 
-            calibration_params_keys = ['Edep', 'Eev', 'Eabs', 'Edes', 
-                'deltaE', 'kevap_A', 'kevap_E', 'scalef', 'scalefcov']
-
-
         else:
             if self.substrate == 'Si':
                 if self.precursors == ['SiH4', 'H2']:
@@ -457,11 +503,6 @@ class CVD():
                     self.precursor_masses = {'SiH4': M_SiH4, 'H2': M_H2}
                     self.listcov = ['H']
                     self.listcovZ = [1]
-
-                    calibration_params_keys = ['Edep', 'Eev', 'Eabs', 'Edes', 'deltaH', 'deltaCl', 
-                        'Ereact_SiH4', 'Ereact_H2', 'k_Si_SiH4', 'k_H_SiH4', 'k_H_H2', 'scalef', 
-                        'aads', 'bads', 's0', 'Ades', 'Aev', 'Bev', 'Adep']
-
                 else:
                     print('ERROR: CVD process for substrate {} with precursors {} is not implemented'.format(self.substrate, self.precursors))
                     sys.exit()
@@ -469,29 +510,12 @@ class CVD():
                 print('ERROR: CVD process for substrate {} is not implemented'.format(self.substrate))
                 sys.exit()
 
-        # Check calibration params
-        if calibration_params is None:
-            print('ERROR: Please provide calibration parameters dictionary...')
-            sys.exit()
-
-        for key in calibration_params_keys:
-            if key not in list(calibration_params.keys()):
-                print('  ERROR: please provide calibration parameter {} '.format(key))
-                sys.exit()
-
-        # for key, value in calibration_params.items():
-        #     if key not in calibration_params_keys:
-        #         print('  ERROR: please provide calibration parameter {} '.format(key))
-        #         sys.exit()
-        # Assign calibration params
-        self.calibration_params = copy.deepcopy(calibration_params)
-
 
         print('*** Initializing CVD process for {} substrate with precursors {}'.format(self.substrate, self.precursors))
         print('mass \t\t\t--> Substrate Mass [Kg/mol]:', self.mass)
         print('rho \t\t\t--> Substrate Density [Kg/m^3]:', self.rho)
         print('rho_surf \t\t--> Substrate Surface density [Kg/m^2]:', self.rho_surf)
-        print('at_density \t\t--> Substrate Surface atomic density [at/m^2]:', self.at_density)
+        #print('at_density \t\t--> Substrate Surface atomic density [at/m^2]:', self.at_density)
         print('temp \t\t\t--> Substrate temperature [K]:', self.temp)
         print('precursor_masses \t--> Precursor Masses [kg/mol]:\n', self.precursor_masses)
         print('partial_pressures \t\t--> Precursors partial pressures [Pa]:\n', self.partial_pressures)

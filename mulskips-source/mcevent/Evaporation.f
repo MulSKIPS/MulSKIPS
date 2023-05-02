@@ -22,7 +22,7 @@
 !     Evaporation SUBROUTINE
 !     it updates the systems's state after the evaporation of an atom
 !     the IndAtom points to a full site before the update procedure
-      SUBROUTINE Evaporation(IndAtom) ! IAtom 1=01 Si 2=10 C
+      SUBROUTINE Evaporation(IndAtom) ! IAtom 1=001 Si 2=010 C 3=011 B
       USE DefDerType
       USE DefSystem
       USE Definitions
@@ -203,7 +203,7 @@ C                 ELSE
      >                  PosSiC,LenSiC)
                 CALL Get_Prob(1,SiOrC,CovInd,CoorNN,NextN(1:3,i),NextNN,     ! Set evaporation probability (can vary depending on coverage and coor) (Here CovInd can only be zero)
      >                     Index_Event,Prob) ! Occ=1/0 NSiC 1=01 Si, 2=10 C
-                ListAdAtom(IndNN) % Ind_Event = Index_Event               ! NOTE: if CoorNN = 0, then Index_Event will be set to 3 with huge probability so it will evaporate immediately (Case N_Si+N_C+N_wall+N_cov=0 in Get_Prob). So no need to Erase it now. (Sicuri?)
+                ListAdAtom(IndNN) % Ind_Event = Index_Event               ! NOTE: if CoorNN = 0, then Index_Event will be set to 3 with huge probability so it will evaporate immediately (Case N_Si+N_C+N_B+N_wall+N_cov=0 in Get_Prob). So no need to Erase it now. (Sicuri?)
                 ListAdAtom(IndNN) % ProbTrans = Prob
                 CALL Updatetree(IndNN,Prob) !
               END IF

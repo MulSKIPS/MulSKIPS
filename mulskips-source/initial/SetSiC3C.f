@@ -111,7 +111,7 @@
             END DO
 !            write(*,*)Site,Coo,LattCoo(Site(1),Site(2),Site(3))
             Prob = PtransE(1,2,0,0,0,0,0)! Si atom on SiC Surface
-            Index_Event = 3
+            Index_Event = 4
             CALL AddMC(Site,NextN,Index_Event,Prob)
            ELSE IF(MOD(x1+y1+z1,4).EQ.3)THEN ! C Atoms
             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
@@ -133,7 +133,7 @@
             END DO
 !            write(*,*)Site,Coo,LattCoo(Site(1),Site(2),Site(3))
             Prob = PtransE(2,2,0,0,0,0,0)! C atom on SiC Surface
-            Index_Event = 3
+            Index_Event = 4
             CALL AddMC(Site,NextN,Index_Event,Prob)
            END IF
           END IF

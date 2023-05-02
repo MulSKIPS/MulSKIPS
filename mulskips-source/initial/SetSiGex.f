@@ -22,7 +22,7 @@
 **
 **
 **************************************************************************************
-      SUBROUTINE SetSiGex(Len,alloyfraction)
+      SUBROUTINE SetSiGex(Len)
       USE DefSystem
       USE Definitions
       IMPLICIT NONE
@@ -33,7 +33,7 @@
       INTEGER NextN(3,4),Buf(3)
 
       INTEGER :: Index_Event, indsp
-      REAL(8) :: Prob, alloyfraction, rr
+      REAL(8) :: Prob, rr
 
       write(*,*) 'Setting up SiGe alloy with fraction = ', alloyfraction
 !  Filled wall Sites at z=0 (helps with migrating vacancies issue)
@@ -146,7 +146,7 @@
             END DO
 !            write(*,*)Site,Coo,LattCoo(Site(1),Site(2),Site(3))
             Prob = PtransE(1+indsp,2,0,0,0,0,0)! Si atom on SiGex Surface
-            Index_Event = 3
+            Index_Event = 4
             CALL AddMC(Site,NextN,Index_Event,Prob)
            ELSE IF(MOD(x1+y1+z1,4).EQ.3)THEN ! Ge Atoms
             rr = RAND()
@@ -177,7 +177,7 @@
             END DO
 !            write(*,*)Site,Coo,LattCoo(Site(1),Site(2),Site(3))
             Prob = PtransE(1+indsp,2,0,0,0,0,0)! Ge atom on SiGex Surface
-            Index_Event = 3
+            Index_Event = 4
             CALL AddMC(Site,NextN,Index_Event,Prob)
            END IF
           END IF

@@ -53,7 +53,6 @@
       LOGICAL   MolmOutpStat
       REAL(8) Random
       EXTERNAL Random
-      REAL(8) alloyfraction
 ! Executable statments
 8     FORMAT(I4,I5,' ',8ES10.3)
 9     FORMAT(I4,' ',8ES10.3)
@@ -139,8 +138,12 @@
       END IF
       
       ! If SiGe read alloy fraction
-      IF(InitSt.EQ.'SG')THEN ! SiGex
-        READ(IPF,*)alloyfraction
+      IF((ALL(ListCrystal(:NCrystal).EQ.(/14, 32/))).OR.
+     >   (ALL(ListCrystal(:NCrystal).EQ.(/14, 32, 5/))))THEN ! SiGex or SiGex:B (NEEDS GENERALIZATION IF THE ALLOY HAS DIFFERENT SPECIES)
+        READ(IPF,*) alloyfraction
+        write(*,*)'Ge fraction in substrate: ', alloyfraction
+      ELSE
+        alloyfraction = 0.0 ! Ge concentration in SiGe (set to zero for Si)
       END IF
 
       ! Probability for defect formation
@@ -235,7 +238,7 @@
          CALL SetSi(Len1) ! Len1: init Slab height. 
       ELSE IF(InitSt.EQ.'SG')THEN
          Len1=Len1-MOD(Len1,24)
-         CALL SetSiGex(Len1, alloyfraction) ! Len1: init Slab height. 
+         CALL SetSiGex(Len1) ! Len1: init Slab height. 
       ELSE IF(InitSt.EQ.'A')THEN
          CALL SetAFBSymZimb1(Len1)
       ELSE IF(InitSt.EQ.'I')THEN
@@ -323,27 +326,27 @@
        END SELECT       
 
        SELECT CASE (Itrans)
-         CASE (:2) ! deposition crystal species (e.g. 1=Si, 2=C); will need to shift all Itrans for other events by 1 if we want to include a third crystal species
+         CASE (:3) ! deposition crystal species (e.g. 1=Si, 2=C); will need to shift all Itrans for other events by 1 if we want to include a third crystal species
 C           IF(MOD(Iter,OutMolMol).EQ.0)THEN
 C             write(*,*)'Iter',Iter,' Deposition',Ind,Patom,Itrans
 C           END IF
            CALL Deposition(Ind,Itrans)
            CountCrystal(Itrans) = CountCrystal(Itrans) + 1
-         CASE (3) ! evaporation of crystal species
+         CASE (4) ! evaporation of crystal species
 C            IF(MOD(Iter,OutMolMol).EQ.0)THEN
 C              write(*,*)'Iter',Iter,'Evaporation',Ind,Patom
 C            END IF
            CALL Evaporation(Ind)
-         CASE (4) ! desorption of coverage species
+         CASE (5) ! desorption of coverage species
 C            Site=ListAdAtom(Ind) % AtomXYZ
 C            write(*,*)'Iter',Iter,Ind,Patom,'   desorption of',
 C      >      IBITS(LattCoo(Site(1),Site(2),Site(3)),PosIndex,LenIndex)
            CALL desorption(Ind)
-         CASE (5:) ! absorption of coverage species (Itrans >= 5)
-           CovInd = ListCov(Itrans-4)
+         CASE (6:) ! absorption of coverage species (Itrans >= 6)
+           CovInd = ListCov(Itrans-5)
 C            write(*,*)'Iter',Iter,Ind,Patom,'absorption of',CovInd
            CALL absorption(Ind,CovInd)
-           CountCov(Itrans-4) = CountCov(Itrans-4) + 1
+           CountCov(Itrans-5) = CountCov(Itrans-5) + 1
        END SELECT
 
        Iter = Iter +1

@@ -79,6 +79,7 @@
       DO i=1,maxElines
         READ(IPF,*)indsp,elind,probvalue
         IF(indsp.GT.NCrystal)THEN
+          WRITE(*,*)indsp,elind,probvalue
           write(*,*)'ERROR: 1st index in evap prob must be <= NCrystal'
           STOP
         END IF

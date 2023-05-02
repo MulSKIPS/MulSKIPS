@@ -21,14 +21,14 @@
 **************************************************************************8
 
       SUBROUTINE Get_Prob_Ini(Occ,NSiC,Coor,Site,NextN,  ! Only for pure 3C Configurations
-     >                    Index_Event,Prob_Event) ! Occ=1/0 NSiC 1=01 Si, 2=10 C
+     >                    Index_Event,Prob_Event) ! Occ=1/0 NSiC 1=001 Si, 2=010 C 3=011 B
       USE DefDerType
       USE DefSystem
       USE Definitions
       IMPLICIT NONE
       INTEGER Occ,NdiC,Coor,CoorNN,CovInd
       INTEGER Site(3),NextN(3,4)
-      INTEGER i,Index_Event,SiOrC,NSiC,N_C,N_Si,N_cov
+      INTEGER i,Index_Event,SiOrC,NSiC,N_C,N_Si,N_B,N_cov
       REAL(8) Prob_Event
       REAL(8):: Ptot,Pcurr
       REAL(8) :: random
@@ -89,10 +89,12 @@ C         PD = 0.5d0 * P0 * EXP(-PtransD/kb)
             CoorNN=IBITS(LattCoo(NextN(1,1),NextN(2,1),NextN(3,1)),
      >                  PosCoor,LenCoor)
             IF(CoorNN.GE.2)THEN ! in the case Coor=1 the single first neighbor should have CoorNN=3
-              Ptot=PD(1,Coor)+PD(2,Coor)
+              Ptot=PD(1,Coor)+PD(2,Coor)+PD(3,Coor)
               Pcurr=random(idum)*Ptot
               IF(Pcurr.LE.PD(1,Coor))THEN
                 Index_Event = 1
+              ELSE IF(Pcurr.GT.(PD(1,Coor)+PD(2,Coor)))THEN
+                Index_Event = 3        
               ELSE
                 Index_Event = 2
               END IF
@@ -102,10 +104,12 @@ C         PD = 0.5d0 * P0 * EXP(-PtransD/kb)
               Prob_Event = 1.e-6
             END IF
           ELSE IF ((Coor.EQ.2).OR.(Coor.EQ.3))THEN
-            Ptot=PD(1,Coor)+PD(2,Coor)
+            Ptot=PD(1,Coor)+PD(2,Coor)+PD(3,Coor)
             Pcurr=random(idum)*Ptot
             IF(Pcurr.LE.PD(1,Coor))THEN
                Index_Event = 1
+            ELSE IF(Pcurr.GT.(PD(1,Coor)+PD(2,Coor)))THEN
+               Index_Event = 3     
             ELSE
                Index_Event = 2
             END IF
@@ -118,7 +122,8 @@ C         PD = 0.5d0 * P0 * EXP(-PtransD/kb)
       ELSE ! Occ=1 Evaporation
          N_Si=0
          N_C =0
-         N_cov = 0  ! TODO: eventually there should be an array including N_Si, N_C, N_walls etc in case of more species. 
+         N_B =0
+         N_cov = 0  ! TODO: eventually there should be an array including N_Si, N_C, N_B, N_walls etc in case of more species. 
          !write(*,*)'Get Prob Site',Site,Occ,Coor
          DO i=1,4
            CovInd = IBITS(LattCoo(NextN(1,i),NextN(2,i),NextN(3,i))
@@ -128,28 +133,29 @@ C         PD = 0.5d0 * P0 * EXP(-PtransD/kb)
      >                  PosSiC,LenSiC)
              IF(SiOrC.EQ.1)N_Si=N_Si+1
              IF(SiOrC.EQ.2)N_C=N_C+1
+             IF(SiOrC.EQ.3)N_B=N_B+1
 C             write(*,*)'Get Prob SiOrC',NextN(1:3,i),SiOrC
            ELSE
              N_cov=N_cov+1
            END IF
          END DO
-         IF(N_Si+N_C+N_cov.NE.Coor)THEN
-            write(*,*)Coor,N_Si,N_C,N_cov,
-     >           'Get Prob Error N_Si+N_C+N_cov.NE.Coor'
+         IF(N_Si+N_C+N_B+N_cov.NE.Coor)THEN
+            write(*,*)Coor,N_Si,N_C,N_B,N_cov,
+     >           'Get Prob Error N_Si+N_C++N_B+N_cov.NE.Coor'
             write(*,*)Site,NextN            
             STOP
          END IF
-         IF (N_Si+N_C+N_cov.GT.3)THEN
+         IF (N_Si+N_C+N_B+N_cov.GT.3)THEN
             Index_Event = 0
             Prob_Event = 0.d0
             !write(*,*)Coor,'Get Prob Bulk Site'
-         ELSE IF(N_Si+N_C+N_cov.EQ.0)THEN
-            Index_Event = 3
+         ELSE IF(N_Si+N_C+N_B+N_cov.EQ.0)THEN
+            Index_Event = 4
             Prob_Event = 100000.*Tree(1)  ! it makes its evaporation a fast event
             write(*,*)Coor,'Get Prob Isolated Atom'
          ELSE
-            Index_Event = 3
-            Prob_Event = PE(NSic,N_Si+N_cov,N_C,0,0,0,0)
+            Index_Event = 4
+            Prob_Event = PE(NSic,N_Si+N_cov,N_C,N_B,0,0,0)
          END IF
       END IF
       END SUBROUTINE Get_Prob_Ini

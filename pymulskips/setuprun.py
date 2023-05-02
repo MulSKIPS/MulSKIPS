@@ -14,7 +14,7 @@ import os,shutil,subprocess,sys
 # Function to Generate input for mulskips and run mulskips simulation 
 def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
     PtransZig=1.0, ExitStrategy='Iter', OutMolMol=None, IterMax=None, TotTime=None, OutTime=None,
-    Seed_box=[120,120,120], RunType='R', IDUM=9117116, setup_only=False,
+    Seed_box=None, RunType='R', IDUM=9117116, setup_only=False,
     cadfilename=None, tempfilename=None, LenVac=None, LenNuc=None, initialState='homogeneous', LenSiGe=None,
     SaveCoo=False, coofilename=None,
     SaveFinalState=False, restartfilename=None,
@@ -32,7 +32,8 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
         print(necessary_input)
         sys.exit()    
 
-
+    if Seed_box == None:
+        Seed_box = [120, 120, 120]
 
     # Fundamental check
     necessary_input = [Simulation, mp]
@@ -316,10 +317,10 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
             Sys_size=' '.join([str(s) for s in Seed_box])
             file.write(Sys_size+" ! Len1 [Len2 Len3 Len4 Len5]" + "\n")
         
-        if mp.listcryZ == [14, 32]: # SiGe 
+        if (14 in mp.listcryZ) and (32 in mp.listcryZ): # SiGe 
             file.write(str(mp.calibration_params['X0'][1]) + " ! Ge fraction in substrate " + "\n")
-            file.write("{:.15f}".format(LenSiGe) + " ! LenSiGe -> SiGe thickness in Ang" + "\n")
-            # if Simulation == 'LA':
+            if Simulation == 'LA':
+                file.write("{:.15f}".format(LenSiGe) + " ! LenSiGe -> SiGe thickness in Ang" + "\n")
             #     file.write(str(mp.calibration_params['X'][1]) + " ! Ge fraction in liquid " + "\n")
 
         file.write(str(PtransZig)+" ! PtransZig" +  "\n")

@@ -24,7 +24,7 @@
 !     LenX,LenY,LenZ:    Dimensioni del sistema
 !     LattCoo      :    Numero Di Coordinazione Relativo al Sito
 !     LattInd       :    Indice del Sito nel vettore Listporb
-       INTEGER, PARAMETER :: LenX=480, LenY=480, LenZ=480
+       INTEGER, PARAMETER :: LenX=240, LenY=240, LenZ=780
        INTEGER, PARAMETER :: LenXGr=4*LenX/3,LenYGr=2*LenY/3
        INTEGER :: Nedge=-1
        INTEGER, PARAMETER :: NSites=LenX*LenY*LenZ
@@ -71,6 +71,7 @@
       ! Store tabulated PtransE, PtransD, PtransDes, and PtransAbs as arrays of dimension ntempMax
       INTEGER, PARAMETER :: ntempMax=300
       INTEGER :: ntemp, nprob
+      REAL(8) alloyfraction
       LOGICAL :: fixedT
       INTEGER, DIMENSION(ntempMax) :: reftempvalues
       REAL(8), DIMENSION(ntempMax,NCrystalMax,1:NTransD) :: refPTransD
@@ -86,8 +87,8 @@
        INTEGER,PARAMETER:: PosT=9,LenT=13
        INTEGER,PARAMETER:: PosIndex=0,LenIndex=8,PosOcc=23,LenOcc=1
        INTEGER,PARAMETER:: PosCoor=24,LenCoor=3
-       INTEGER,PARAMETER:: PosSi=28,PosC=29,LenSiC=2
-       INTEGER,PARAMETER:: PosSiC=28,LenSi=1,LenC=1
+       INTEGER,PARAMETER:: PosSi=27,PosC=28,LenSiC=3
+       INTEGER,PARAMETER:: PosSiC=27,LenSi=1,LenC=1,PosB=29,LenB=1
        INTEGER, DIMENSION(8)  :: NComplBCC
        INTEGER, DIMENSION(8)  :: NComplFCC
        INTEGER, DIMENSION(3,8)  :: NComplDia

@@ -35,11 +35,20 @@
       REAL(8) :: Prob
 
       INTEGER :: temperature
+      REAL(8) :: rr, LenSiGe
+      INTEGER :: k
+
 
       INTEGER :: IPF50, IPF60
       REAL(8) :: LenIn(LenX*LenY)
 
 
+      IF(alloyfraction.GT.0)THEN
+        write(*,*) 'Setting up a', LenSiGe, 'Angstrom-thick SiGe layer 
+     >   with fraction = ', alloyfraction
+      ELSE
+        write(*,*) 'Setting up Silicon'
+      END IF 
 
       ! CASE 1
       IF(RunType.EQ.'C')THEN
@@ -111,17 +120,18 @@
                 LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
                 CovInd=113 
                 CALL MVBITS(CovInd,0,LenIndex,LattCoo(x,y,z),PosIndex)
-              ! Set species
-              ELSE IF(Id.NE.0)THEN! Si  
+            ! Set species
+              ELSE IF(Id.EQ.1)THEN ! Si  
+  !                 ELSE IF(Id.NE.0)THEN! Si  
                 IF(MOD(x,3).EQ.0.AND.MOD(y,3).EQ.0
-     >                .AND.MOD(z,3).EQ.0)THEN
+     >                  .AND.MOD(z,3).EQ.0)THEN
                   x1=x/3
                   y1=y/3
                   z1=z/3
                   IF((MOD(x1,2).EQ.MOD(y1,2)).AND.
-     >                 (MOD(x1,2).EQ.MOD(z1,2)))THEN
+     >                  (MOD(x1,2).EQ.MOD(z1,2)))THEN
                     IF((MOD(x1+y1+z1,4).EQ.0).OR.
-     >                   (MOD(x1+y1+z1,4).EQ.3))THEN ! Si sites                    
+     >                     (MOD(x1+y1+z1,4).EQ.3))THEN ! Si sites                    
                       IF(InitSt.EQ.'LA')THEN
                         ! we need to nucleate at least 2 nm of liquid
                         IF(Homogeneous.EQ.'T')THEN
@@ -129,7 +139,16 @@
                           IF(z.LE.(LenZ-INT((LenVac+LenNuc)/sf)))THEN 
                             ! LenVac + LenNucleus in [ang]
                             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
-                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)                      
+                            IF(z.LE.(LenZ-INT((LenVac+LenSiGe)/sf)))THEN
+                              rr = 1.0   ! choose Si
+                            ELSE
+                              rr = RAND()
+                            END IF           
+                            IF(rr.GE.alloyfraction)THEN
+                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
+                            ELSE
+                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+                            END IF
                           END IF
                         ELSE IF(Homogeneous.EQ.'F')THEN
                         ! here instead we do it dishomogeneously, starting from a semi-spherical nucleus of radius LenNuc (Ang)
@@ -137,9 +156,18 @@
                           y0 = INT(LenY/2)
                           z0 = LenZ-INT(LenVac/sf)
                           IF(((x-x0)*(x-x0)+(y-y0)*(y-y0)+(z-z0)*(z-z0))
-     >                      .GT.(INT((LenNuc/sf)*(LenNuc/sf))))THEN 
+     >                        .GT.(INT((LenNuc/sf)*(LenNuc/sf))))THEN 
                             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
-                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)                      
+                            IF(z.LE.(LenZ-INT((LenVac+LenSiGe)/sf)))THEN
+                              rr = 1.0   ! choose Si
+                            ELSE
+                              rr = RAND()
+                            END IF           
+                            IF(rr.GE.alloyfraction)THEN
+                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
+                            ELSE
+                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+                            END IF
                           END IF
                         ELSE
                           WRITE(*,*)'ERROR: Homogeneous needs to be eith
@@ -147,12 +175,18 @@
                         END IF
                       ELSE IF(InitSt.EQ.'IN')THEN
                         LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
-                        LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)                      
+                        rr = RAND()
+                        IF(rr.GE.alloyfraction)THEN
+                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
+                        ELSE
+                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+                        END IF
                       END IF
                     END IF
                   END IF  
                 END IF  
               END IF 
+
             END DO
           END DO
         END DO

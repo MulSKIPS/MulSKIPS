@@ -24,7 +24,7 @@
       USE  DefSystem
       USE  Definitions
       IMPLICIT NONE
-      INTEGER IfSi,IfC,IcellSiC,JcellSiC,IGr,JGr,indAtom
+      INTEGER IAt,IcellSiC,JcellSiC,IGr,JGr,indAtom
       INTEGER x,y,z,x1,y1,z1,IfOcc,Coo,NCoorCorr,CovInd
       INTEGER NumAtTotal,NoEpiBulk,NoEpiSurf,NvoidMerged,NumAtWrong
       INTEGER NumIsWrong,ind_atotype,NumCovTotal
@@ -143,10 +143,10 @@ C       sf = 4.63/12.0  ! valid only for SiC
                 END IF
               END IF
               IF(noepi)THEN
-                IfSi=IBITS(LattCoo(x,y,z),PosSi,LenSi)
-                IfC=IBITS(LattCoo(x,y,z),PosC,LenC)
-                IF(IfSi.EQ.1)WRITE(FN+3,103)sf*x,sf*y,sf*z
-                IF(IfC.EQ.1)WRITE(FN+3,101)sf*x,sf*y,sf*z
+                IAt=IBITS(LattCoo(x,y,z),PosSiC,LenSiC)
+                IF(IAt.EQ.1)WRITE(FN+3,103)sf*x,sf*y,sf*z
+                IF(IAt.EQ.2)WRITE(FN+3,101)sf*x,sf*y,sf*z
+                IF(IAt.EQ.3)WRITE(FN+3,106)sf*x,sf*y,sf*z
               END IF
             END IF
          END DO
@@ -166,27 +166,45 @@ C       sf = 4.63/12.0  ! valid only for SiC
       DO z=0,LenZ-1
         DO y=0,LenY-1
           DO x=0,LenX-1
-            IfSi=IBITS(LattCoo(x,y,z),PosSi,LenSi)
-            IfC=IBITS(LattCoo(x,y,z),PosC,LenC)
+            IAt=IBITS(LattCoo(x,y,z),PosSiC,LenSiC)
             Coo = IBITS(LattCoo(x,y,z),PosCoor,LenCoor)
             CovInd = IBITS(LattCoo(x,y,z),PosIndex,LenIndex)
             IF(CovInd.EQ.1)WRITE(FN,105)sf*x,sf*y,sf*z !, rad
             IF(CovInd.EQ.17)WRITE(FN,106)sf*x,sf*y,sf*z !, rad
-            IF(IfSi.EQ.1.AND.Coo.LE.3)WRITE(FN,100)sf*x,sf*y,sf*z !, rad
-            IF(IfC.EQ.1.AND.Coo.LE.3)THEN
+            IF(IAt.EQ.1.AND.Coo.LE.3)WRITE(FN,100)sf*x,sf*y,sf*z !, rad
+            IF(IAt.EQ.2.AND.Coo.LE.3)THEN
               IF(NCrystal.EQ.1)THEN
-                WRITE(*,*)'ERR: IfC=1 should not happen, NCrystal=1!!!'
+                WRITE(*,*)'ERR: IAt=2 should not happen, NCrystal=1'
                 STOP
               END IF
-              IF(ANY(ListCrystal.EQ.6))THEN
+              IF(ListCrystal(IAt).EQ.6)THEN
                 WRITE(FN,102)sf*x,sf*y,sf*z !, rad
-              ELSE IF(ANY(ListCrystal.EQ.32))THEN
+              ELSE IF(ListCrystal(IAt).EQ.32)THEN
                 WRITE(FN,103)sf*x,sf*y,sf*z !, rad
+              ELSE IF(ListCrystal(IAt).EQ.5)THEN
+                WRITE(FN,101)sf*x,sf*y,sf*z !, rad
               ELSE
                 WRITE(*,*)'ERROR: 2nd crystal specie can only be C/Ge'
                 STOP
               END IF
             END IF
+            IF(IAt.EQ.3.AND.Coo.LE.3)THEN
+              IF(NCrystal.LE.2)THEN
+                WRITE(*,*)'ERR: IAt=3 should not happen if NCrystal<3'
+                STOP
+              END IF
+              IF(ListCrystal(IAt).EQ.6)THEN
+                WRITE(FN,102)sf*x,sf*y,sf*z !, rad
+              ELSE IF(ListCrystal(IAt).EQ.32)THEN
+                WRITE(FN,103)sf*x,sf*y,sf*z !, rad
+              ELSE IF(ListCrystal(IAt).EQ.5)THEN
+                WRITE(FN,101)sf*x,sf*y,sf*z !, rad
+              ELSE
+                WRITE(*,*)'ERROR: 2nd crystal specie can only be C/Ge'
+                STOP
+              END IF
+            END IF
+
           END DO
         END DO
       END DO
@@ -229,16 +247,15 @@ C       sf = 4.63/12.0  ! valid only for SiC
                 Coo = IBITS(LattCoo(x,y,z),PosCoor,LenCoor)
                 IF (IfOcc.EQ.1.AND.Coo.EQ.4)THEN
                     indAtom=LattInd(x,y,z)
-                    IfSi=IBITS(LattCoo(x,y,z),PosSi,LenSi)
-                    IfC=IBITS(LattCoo(x,y,z),PosC,LenC)
+                    IAt=IBITS(LattCoo(x,y,z),PosSiC,LenSiC)
                     NextN=ListAtom(indAtom) % NextNXYZ
                     NCoorCorr=0
-                    IF(IfSi.EQ.1)THEN
+                    IF(IAt.EQ.1)THEN
                         DO i=1,4
                             NCoorCorr=NCoorCorr+
      >    IBITS(LattCoo(NextN(1,i),NextN(2,i),NextN(3,i)),PosC,LenC)
                         END DO
-                    ELSE IF(IfC.EQ.1)THEN
+                    ELSE IF(IAt.EQ.2)THEN
                         DO i=1,4
                             NCoorCorr=NCoorCorr+
      >    IBITS(LattCoo(NextN(1,i),NextN(2,i),NextN(3,i)),PosSi,LenSi)
@@ -246,7 +263,7 @@ C       sf = 4.63/12.0  ! valid only for SiC
                     END IF
                     IF(NCoorCorr.EQ.0)THEN ! only isolated 
                         NumIsWrong=NumIsWrong+1
-                        IF(IfSi.EQ.1)THEN
+                        IF(IAt.EQ.1)THEN
                             LattCoo(x,y,z)=IBCLR(LattCoo(x,y,z),PosSi)
                             LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
                             ListAtBuffer(NumIsWrong) % AtomXYZ(1)=x
@@ -276,16 +293,15 @@ C       sf = 4.63/12.0  ! valid only for SiC
               Coo = IBITS(LattCoo(x,y,z),PosCoor,LenCoor)
               IF (IfOcc.EQ.1.AND.Coo.EQ.4)THEN
                   indAtom=LattInd(x,y,z)
-                  IfSi=IBITS(LattCoo(x,y,z),PosSi,LenSi)
-                  IfC=IBITS(LattCoo(x,y,z),PosC,LenC)
+                  IAt=IBITS(LattCoo(x,y,z),PosSiC,LenSiC)
                   NextN=ListAtom(indAtom) % NextNXYZ
                   NCoorCorr=0
-                  IF(IfSi.EQ.1)THEN
+                  IF(IAt.EQ.1)THEN
                       DO i=1,4
                           NCoorCorr=NCoorCorr+
      > IBITS(LattCoo(NextN(1,i),NextN(2,i),NextN(3,i)),PosC,LenC)
                       END DO
-                  ELSE IF(IfC.EQ.1)THEN
+                  ELSE IF(IAt.EQ.2)THEN
                       DO i=1,4
                           NCoorCorr=NCoorCorr+
      > IBITS(LattCoo(NextN(1,i),NextN(2,i),NextN(3,i)),PosSi,LenSi)
@@ -311,24 +327,23 @@ C       sf = 4.63/12.0  ! valid only for SiC
                   NumAtTotal=NumAtTotal+1
               ELSE IF (IfOcc.EQ.1.AND.Coo.EQ.4)THEN
                   indAtom=LattInd(x,y,z)
-                  IfSi=IBITS(LattCoo(x,y,z),PosSi,LenSi)
-                  IfC=IBITS(LattCoo(x,y,z),PosC,LenC)
+                  IAt=IBITS(LattCoo(x,y,z),PosSiC,LenSiC)
                   NextN=ListAtom(indAtom) % NextNXYZ
                   NCoorCorr=0
-                  IF(IfSi.EQ.1)THEN
+                  IF(IAt.EQ.1)THEN
                       DO i=1,4
                           NCoorCorr=NCoorCorr+
      > IBITS(LattCoo(NextN(1,i),NextN(2,i),NextN(3,i)),PosC,LenC)
                       END DO
-                  ELSE IF(IfC.EQ.1)THEN
+                  ELSE IF(IAt.EQ.2)THEN
                       DO i=1,4
                           NCoorCorr=NCoorCorr+
      > IBITS(LattCoo(NextN(1,i),NextN(2,i),NextN(3,i)),PosSi,LenSi)
                       END DO
                   END IF
                   IF(NCoorCorr.EQ.3)THEN 
-                      IF(IfSi.EQ.1)WRITE(FN+5,100)sf*x,sf*y,sf*z
-                      IF(IfC.EQ.1)WRITE(FN+5,102)sf*x,sf*y,sf*z
+                      IF(IAt.EQ.1)WRITE(FN+5,100)sf*x,sf*y,sf*z
+                      IF(IAt.EQ.2)WRITE(FN+5,102)sf*x,sf*y,sf*z
                   END IF 
               END IF
            END DO
