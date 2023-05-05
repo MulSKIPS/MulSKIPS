@@ -48,7 +48,6 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
     print('Executable directory: ', execpath)
     print('Simulation directory: ', runpath)
     print('Type of simulation: ', Simulation)
-    print('Mulskips class: ', mp)
 
     # Skip if MulSKIPS needs to be run in the current directory 
     path = os.getenv("PWD")
@@ -86,6 +85,11 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
         except OSError:
             print("Can't change the Current Working Directory")
 
+    if mp == 'custom':
+        # Check if start.dat is in rundir. Exit otherwise.
+        print('Reading pre-existing start.dat file in: ', runpath)
+    else:
+        print('Mulskips class: ', mp)
 
     print('PtransZig: ', PtransZig)
     print("ExitStrategy: ", ExitStrategy)
@@ -156,242 +160,242 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
             sys.exit()
 
     # ----- GENERATE INPUT FILE
+    if mp != 'custom':
+        if Simulation != 'ST':
+            if mp.__class__.__name__ == 'PhaseChange':
+                
+                # If Laser annealing
+                if Simulation == 'LA':
+                    """
+                    Generate input for mulskips and run simulation with T map and geometry from fem.
+                    NB: We'll set only energetics in start.dat. Probabilities will be calculated 
+                    directly inside mulskips using T map from fem.
+                    """
+                    if driver==None and tempfilename==None: 
+                        print('ERROR: please set \'tempfilename\' or \'driver\' flag')
+                        sys.exit()
+                    elif driver!=None and tempfilename!=None: 
+                        print('ERROR: please set \'tempfilename\' or \'driver\' flag')
+                        sys.exit()
 
-    if Simulation != 'ST':
-        if mp.__class__.__name__ == 'PhaseChange':
-            
-            # If Laser annealing
-            if Simulation == 'LA':
-                """
-                Generate input for mulskips and run simulation with T map and geometry from fem.
-                NB: We'll set only energetics in start.dat. Probabilities will be calculated 
-                directly inside mulskips using T map from fem.
-                """
-                if driver==None and tempfilename==None: 
-                    print('ERROR: please set \'tempfilename\' or \'driver\' flag')
-                    sys.exit()
-                elif driver!=None and tempfilename!=None: 
-                    print('ERROR: please set \'tempfilename\' or \'driver\' flag')
-                    sys.exit()
-
-                # Check input is OK
-                necessary_input = [TotTime, LenVac, LenNuc, SaveCoo, initialState, LenSiGe]
-                if not all(v is not None for v in necessary_input):
-                    print('\nERROR. Please define all the necessary input (see list below):')
-                    print('[TotTime, LenVac, LenNuc, SaveCoo, initialState, LenSiGe]')
-                    print(necessary_input)
-                    sys.exit()
-
-                if driver == None:
-                    necessary_input = [tempfilename, cadfilename, coofilename, restartfilename]
+                    # Check input is OK
+                    necessary_input = [TotTime, LenVac, LenNuc, SaveCoo, initialState, LenSiGe]
                     if not all(v is not None for v in necessary_input):
                         print('\nERROR. Please define all the necessary input (see list below):')
-                        print('[tempfilename, cadfilename, coofilename, restartfilename]')
+                        print('[TotTime, LenVac, LenNuc, SaveCoo, initialState, LenSiGe]')
                         print(necessary_input)
                         sys.exit()
-                    print('Input CAD geometry file: ', path+'/'+cadfilename)    
-                    print('Input temperature map file: ', path+'/'+tempfilename)  
-                else:  
-                    print('Input CAD and temperature files are not provided because sockets are ON')  
 
-                print('Top air thickness : {} Ang'.format(LenVac))
-                print('Nucleus radius : {} Ang'.format(LenNuc))
-                print('SiGe thickness : {} Ang'.format(LenSiGe))
-                
-                if driver == None:
-                    if SaveCoo:
-                        print('Output Coor file: ', path+'/'+coofilename)    
-                    else:
-                        print('ERROR: Please set SaveCoo to \'T\' and provide coofilename unless sockets are used... ')
-                        sys.exit()
-                    print('Output checkpoint file for restart run: ', path+'/'+restartfilename)    
-                
-                if initialState=='homogeneous':
-                    homoflag = 'T'
-                elif initialState=='inhomogeneous':
-                    homoflag = 'F'
-                elif initialState=='tripleSF':
-                    homoflag = 'D'
-                elif initialState=='stripe':
-                    homoflag = 'R'
-                print('Model homogeneous nucleation: ', homoflag)
+                    if driver == None:
+                        necessary_input = [tempfilename, cadfilename, coofilename, restartfilename]
+                        if not all(v is not None for v in necessary_input):
+                            print('\nERROR. Please define all the necessary input (see list below):')
+                            print('[tempfilename, cadfilename, coofilename, restartfilename]')
+                            print(necessary_input)
+                            sys.exit()
+                        print('Input CAD geometry file: ', path+'/'+cadfilename)    
+                        print('Input temperature map file: ', path+'/'+tempfilename)  
+                    else:  
+                        print('Input CAD and temperature files are not provided because sockets are ON')  
 
-                # Generation of the evaporation energetics
-                # The probabilities will be calculated internally in mulskips as follows:
-                # PtransE_Si = P0 * np.exp(-ESi/(kb*Temp))
-                Eevap = mp.get_energetics_evap()
+                    print('Top air thickness : {} Ang'.format(LenVac))
+                    print('Nucleus radius : {} Ang'.format(LenNuc))
+                    print('SiGe thickness : {} Ang'.format(LenSiGe))
+                    
+                    if driver == None:
+                        if SaveCoo:
+                            print('Output Coor file: ', path+'/'+coofilename)    
+                        else:
+                            print('ERROR: Please set SaveCoo to \'T\' and provide coofilename unless sockets are used... ')
+                            sys.exit()
+                        print('Output checkpoint file for restart run: ', path+'/'+restartfilename)    
+                    
+                    if initialState=='homogeneous':
+                        homoflag = 'T'
+                    elif initialState=='inhomogeneous':
+                        homoflag = 'F'
+                    elif initialState=='tripleSF':
+                        homoflag = 'D'
+                    elif initialState=='stripe':
+                        homoflag = 'R'
+                    print('Model homogeneous nucleation: ', homoflag)
 
-                # Generation of deposition energetics
-                # The probabilities will be calculated internally in mulskips as follows:
-                # PtransD = 0.5 * P0 * np.exp(-Edep/(kb*Tm)) * dampingfactor(temp)
-                Edep = mp.get_energetics_depo()
+                    # Generation of the evaporation energetics
+                    # The probabilities will be calculated internally in mulskips as follows:
+                    # PtransE_Si = P0 * np.exp(-ESi/(kb*Temp))
+                    Eevap = mp.get_energetics_evap()
 
-                # For BAck compatibility:
-                PtransE = Eevap
-                PtransD = Edep
+                    # Generation of deposition energetics
+                    # The probabilities will be calculated internally in mulskips as follows:
+                    # PtransD = 0.5 * P0 * np.exp(-Edep/(kb*Tm)) * dampingfactor(temp)
+                    Edep = mp.get_energetics_depo()
 
-            # Si(100) melting/solidification
-            elif Simulation == 'FS': #or FG or FSG
-                """
-                Generate input for mulskips and run simulation with T map and geometry from fem.
-                NB: We'll set only energetics in start.dat. Probabilities will be calculated 
-                directly inside mulskips using T map from fem.
-                """
+                    # For BAck compatibility:
+                    PtransE = Eevap
+                    PtransD = Edep
 
-                # EVAPORATION
-                PtransE = mp.get_PtransE()
-                # DEPOSITION
+                # Si(100) melting/solidification
+                elif Simulation == 'FS': #or FG or FSG
+                    """
+                    Generate input for mulskips and run simulation with T map and geometry from fem.
+                    NB: We'll set only energetics in start.dat. Probabilities will be calculated 
+                    directly inside mulskips using T map from fem.
+                    """
+
+                    # EVAPORATION
+                    PtransE = mp.get_PtransE()
+                    # DEPOSITION
+                    PtransD = mp.get_PtransD()
+
+            # in the future I will dop the samw check as below also for SL and LA
+            elif mp.__class__.__name__ == 'CVD':
+                # Get deposition probabilities
                 PtransD = mp.get_PtransD()
+                print('Deposition probabilities: \n {}'.format(PtransD))
 
-        # in the future I will dop the samw check as below also for SL and LA
-        elif mp.__class__.__name__ == 'CVD':
-            # Get deposition probabilities
-            PtransD = mp.get_PtransD()
-            print('Deposition probabilities: \n {}'.format(PtransD))
+                # Get evaporation probabilities
+                """ The logic is as follows:
+                We set the 3 evaporation energies for 1coor, 2coor, and 3coor Si atoms starting from the cases without coverage neighbours. 
+                These are set by perturbing the energetics for deposition, with the constraint that energy for evaporation of Si 2coor is = to energy 
+                for deposition of Si 1coor. The evap energies for 1coor and 3coor Si atoms are then properly calibrated.
+                These 3 energies, in turn, are perturbated by the presence of coverage neighbours, by an amount, ab-initio or calibrated, 
+                set by the function deltaEcov.
+                Then, to find the probabilities, we use as prefactors the same fluxes used to get the deposition frequencies.
+                """
+                PtransE = mp.get_PtransE()
+                print('Evaporation probabilities: \n {}'.format(PtransE))
 
-            # Get evaporation probabilities
-            """ The logic is as follows:
-            We set the 3 evaporation energies for 1coor, 2coor, and 3coor Si atoms starting from the cases without coverage neighbours. 
-            These are set by perturbing the energetics for deposition, with the constraint that energy for evaporation of Si 2coor is = to energy 
-            for deposition of Si 1coor. The evap energies for 1coor and 3coor Si atoms are then properly calibrated.
-            These 3 energies, in turn, are perturbated by the presence of coverage neighbours, by an amount, ab-initio or calibrated, 
-            set by the function deltaEcov.
-            Then, to find the probabilities, we use as prefactors the same fluxes used to get the deposition frequencies.
-            """
-            PtransE = mp.get_PtransE()
-            print('Evaporation probabilities: \n {}'.format(PtransE))
+                # Get absorption probabilities
+                PtransAbs = mp.get_PtransAbs()
+                print('Absorption probabilities: \n {}'.format(PtransAbs))
 
-            # Get absorption probabilities
-            PtransAbs = mp.get_PtransAbs()
-            print('Absorption probabilities: \n {}'.format(PtransAbs))
+                # Get desorption probabilities
+                PtransDes = mp.get_PtransDes()
+                print('Desorption probabilities: \n {}'.format(PtransDes))
 
-            # Get desorption probabilities
-            PtransDes = mp.get_PtransDes()
-            print('Desorption probabilities: \n {}'.format(PtransDes))
+            elif mp.__class__.__name__ == 'PVD':
+                """
+                The stuff below should belong to PVD class as get_ene, get_PtransE etc, same as for CVD...
+                """
 
-        elif mp.__class__.__name__ == 'PVD':
-            """
-            The stuff below should belong to PVD class as get_ene, get_PtransE etc, same as for CVD...
-            """
+                # Get evaporation probabilities
+                PtransE = mp.get_PtransE()
+                print('Evaporation probabilities: \n {}'.format(PtransE))
 
-            # Get evaporation probabilities
-            PtransE = mp.get_PtransE()
-            print('Evaporation probabilities: \n {}'.format(PtransE))
-
-            # Get deposition probabilities
-            PtransD = mp.get_PtransD()
-            print('Deposition probabilities: \n {}'.format(PtransD))
+                # Get deposition probabilities
+                PtransD = mp.get_PtransD()
+                print('Deposition probabilities: \n {}'.format(PtransD))
 
 
-    # ---------------------------------
-    # Generation of the kinetic Monte Carlo input file
-    def print_file_input():
-        file = open('start.dat',"w") 
-        NCrystal, NCov = len(mp.listcry), len(mp.listcov)
-        file.write('{} {} ! NCrystal, NCov \n'.format(NCrystal, NCov))
-        file.write('{} ! Atomic numbers of crystal species \n'.format(' '.join([str(x) for x in mp.listcryZ])))
-        if NCov!=0:
-            file.write('{} ! Atomic numbers of coverage species \n'.format(' '.join([str(x) for x in mp.listcovZ])))
-        file.write(Simulation+" ! Initstat: S Sphere, C Parellelepipid, F Flat SiC-3C(100) surface, FS Flat Si(100) surface, A APB, I inverted pyramid, D inverted pyramid of C, Z inverted pyramid of Si, J inverted pyramid with APB, Fw Flat SiC(100) surface with walls, Fa Flat SiC(100) surface with aperture, SL Si(100) liquid-solid interface, FF FinFET Si (100) liquid-solid, SS Sphere Si liquid-solid" +  "\n")
-        
-        if Simulation == 'IN':
-            file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
-        elif Simulation == 'LA':
-            if driver == None:
-                file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
-                file.write(path+'/'+tempfilename + "\n") # do not put comments here, only the path
-            else:
-                file.write('None' + "\n") # do not put comments here, only the path 
-                file.write('None' + "\n") # do not put comments here, only the path 
-            file.write("{} ! Melting temperature in Kelvin \n".format(' '.join([str(x) for x in mp.Tm])))
-            file.write("{} ! prefactor P0 \n".format(' '.join([str(x) for x in mp.calibration_params['P0']])))
-            file.write("{} ! errf param A \n".format(' '.join([str(x) for x in mp.calibration_params['A']])))
-            file.write("{} ! errf param Tflex \n".format(' '.join([str(x) for x in mp.calibration_params['Tflex']])))
-            file.write("{:.15f}".format(LenVac) + " ! LenVac -> Top air thickness in Ang" + "\n")
-            file.write("{:.15f}".format(LenNuc) + " ! LenNuc -> Nucleus radius in Ang" + "\n")
-            file.write(homoflag + " ! Initial Nucleation State [homogeneous, inhomogeneous, tripleSF, stripe] " + "\n")
-            if initialState=='tripleSF':
-                Sys_size=' '.join([str(s) for s in Seed_box])
-                file.write(Sys_size+" ! Len1 Len2 Len3 Len4 Len5 for configuring a triple SF" + "\n")
-        else:
-            Sys_size=' '.join([str(s) for s in Seed_box])
-            file.write(Sys_size+" ! Len1 [Len2 Len3 Len4 Len5]" + "\n")
-        
-        if (14 in mp.listcryZ) and (32 in mp.listcryZ): # SiGe 
-            file.write(str(mp.calibration_params['X0'][1]) + " ! Ge fraction in substrate " + "\n")
-            if Simulation == 'LA':
-                file.write("{:.15f}".format(LenSiGe) + " ! LenSiGe -> SiGe thickness in Ang" + "\n")
-            #     file.write(str(mp.calibration_params['X'][1]) + " ! Ge fraction in liquid " + "\n")
-
-        file.write(str(PtransZig)+" ! PtransZig" +  "\n")
-        file.write("{:.15f}".format(mp.KMC_sf) + " ! KMC_sf -> KMC Super-Lattice parameter in Ang" + "\n")
-
-        # Exit strategy
-        file.write(ExitStrategy+" ! ExitStrategy. Iter or Time. Decides whether to use iterations or time to check simulation end and output frequency" + "\n")
-        if ExitStrategy == 'Iter':
-            file.write(str(IterMax)+" ! IterMax -> Max number of iterations" + "\n")
-            file.write(str(OutMolMol)+" ! OutMolMol -> output frequency" + "\n")
-        if ExitStrategy == 'Time':
-            file.write("{:.15f}".format(TotTime) + " ! TotTime -> Max time of simulation in seconds" + "\n")
-            file.write("{:.15f}".format(OutTime) + " ! OutTime -> Delta Time between consecutive print, in seconds" + "\n")
-
-        # file.write("10000   ! exit_zeta strategy after lenz=500 " + "\n")        
-
-        file.write(RunType+" ! RunType. R = truly random . T = not so random (use this for regression tests). C = continuation run" + "\n")
-        file.write(str(IDUM)+" ! Random seed" + "\n")
-        file.write(savefinalstateflag+" ! Save final state" + "\n")
-        if SaveFinalState:
-            file.write(path+'/'+restartfilename + "\n") # do not put comments here, only the path
-        file.write(savecooflag+" ! Save final Coor" + "\n")
-        if SaveCoo: # For LA this must be T
-            if driver == None: 
-                file.write(path+'/'+coofilename + "\n") # do not put comments here, only the path
-            else:
-                file.write('None' + "\n") # do not put comments here, only the path
-
-        # Probabilities
-        if Simulation == 'ST' and useProbTable:
-            file.write(ProbTable + "\n") # do not put comments here, only the path
-        else:
-            mulskipsProbThreshold = 5e-12
-            count=0
-            for indsp in range(NCrystal):
-                for ind in mp.indices():
-                    stringa = ''.join([str(s) for s in ind])
-                    indd = tuple(np.insert(ind, 0, indsp))
-                    if PtransE[indd] < mulskipsProbThreshold: print(f'\nWARNING: PtransE[{indd}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
-                    prob = np.amax([mulskipsProbThreshold, PtransE[indd]]) # ensures all probs are above minimum threshold in fortran
-                    file.write("{} {} {} ! PtransE[{},{}] \n".format(indsp+1, stringa, prob, indsp+1, ind))
-                    count+=1
-            print('Number of evaporation probabilities: ', count)
-            for indsp in range(NCrystal):
-                for ii in range(3):
-                    if PtransD[indsp,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransD[{indsp},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
-                    prob = np.amax([mulskipsProbThreshold, PtransD[indsp,ii]]) # ensures all probs are above minimum threshold in fortran
-                    file.write("{} {} {} ! PtransD[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
+        # ---------------------------------
+        # Generation of the kinetic Monte Carlo input file
+        def print_file_input():
+            file = open('start.dat',"w") 
+            NCrystal, NCov = len(mp.listcry), len(mp.listcov)
+            file.write('{} {} ! NCrystal, NCov \n'.format(NCrystal, NCov))
+            file.write('{} ! Atomic numbers of crystal species \n'.format(' '.join([str(x) for x in mp.listcryZ])))
             if NCov!=0:
-                for indsp in range(NCrystal,NCrystal+NCov):
-                    for ii in range(3):
-                        if PtransAbs[indsp-NCrystal,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransAbs[{indsp-NCrystal},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
-                        prob = np.amax([mulskipsProbThreshold, PtransAbs[indsp-NCrystal,ii]]) # ensures all probs are above minimum threshold in fortran
-                        file.write("{} {} {} ! PtransAbs[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
-                for indsp in range(NCrystal,NCrystal+NCov):
-                    for ii in range(3):
-                        if PtransDes[indsp-NCrystal,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransDes[{indsp-NCrystal},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
-                        prob = np.amax([mulskipsProbThreshold, PtransDes[indsp-NCrystal,ii]]) # ensures all probs are above minimum threshold in fortran
-                        file.write("{} {} {} ! PtransDes[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
-        file.close() 
-        print("DONE writing start.dat")
-        return
+                file.write('{} ! Atomic numbers of coverage species \n'.format(' '.join([str(x) for x in mp.listcovZ])))
+            file.write(Simulation+" ! Initstat: S Sphere, C Parellelepipid, F Flat SiC-3C(100) surface, FS Flat Si(100) surface, A APB, I inverted pyramid, D inverted pyramid of C, Z inverted pyramid of Si, J inverted pyramid with APB, Fw Flat SiC(100) surface with walls, Fa Flat SiC(100) surface with aperture, SL Si(100) liquid-solid interface, FF FinFET Si (100) liquid-solid, SS Sphere Si liquid-solid" +  "\n")
+            
+            if Simulation == 'IN':
+                file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
+            elif Simulation == 'LA':
+                if driver == None:
+                    file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
+                    file.write(path+'/'+tempfilename + "\n") # do not put comments here, only the path
+                else:
+                    file.write('None' + "\n") # do not put comments here, only the path 
+                    file.write('None' + "\n") # do not put comments here, only the path 
+                file.write("{} ! Melting temperature in Kelvin \n".format(' '.join([str(x) for x in mp.Tm])))
+                file.write("{} ! prefactor P0 \n".format(' '.join([str(x) for x in mp.calibration_params['P0']])))
+                file.write("{} ! errf param A \n".format(' '.join([str(x) for x in mp.calibration_params['A']])))
+                file.write("{} ! errf param Tflex \n".format(' '.join([str(x) for x in mp.calibration_params['Tflex']])))
+                file.write("{:.15f}".format(LenVac) + " ! LenVac -> Top air thickness in Ang" + "\n")
+                file.write("{:.15f}".format(LenNuc) + " ! LenNuc -> Nucleus radius in Ang" + "\n")
+                file.write(homoflag + " ! Initial Nucleation State [homogeneous, inhomogeneous, tripleSF, stripe] " + "\n")
+                if initialState=='tripleSF':
+                    Sys_size=' '.join([str(s) for s in Seed_box])
+                    file.write(Sys_size+" ! Len1 Len2 Len3 Len4 Len5 for configuring a triple SF" + "\n")
+            else:
+                Sys_size=' '.join([str(s) for s in Seed_box])
+                file.write(Sys_size+" ! Len1 [Len2 Len3 Len4 Len5]" + "\n")
+            
+            if (14 in mp.listcryZ) and (32 in mp.listcryZ): # SiGe 
+                file.write(str(mp.calibration_params['X0'][1]) + " ! Ge fraction in substrate " + "\n")
+                if Simulation == 'LA':
+                    file.write("{:.15f}".format(LenSiGe) + " ! LenSiGe -> SiGe thickness in Ang" + "\n")
+                #     file.write(str(mp.calibration_params['X'][1]) + " ! Ge fraction in liquid " + "\n")
 
-    # Wrote out start.dat in runpath
-    print_file_input()
+            file.write(str(PtransZig)+" ! PtransZig" +  "\n")
+            file.write("{:.15f}".format(mp.KMC_sf) + " ! KMC_sf -> KMC Super-Lattice parameter in Ang" + "\n")
 
-    ## Save calibration parameters to txt file                       
-    with open('calibration_params.txt', 'w') as ff:
-        ff.write('Calibration parameters:\n')
-        for key, value in mp.calibration_params.items():
-            ff.write(' {} \t--> {}\n'.format(key, value))
+            # Exit strategy
+            file.write(ExitStrategy+" ! ExitStrategy. Iter or Time. Decides whether to use iterations or time to check simulation end and output frequency" + "\n")
+            if ExitStrategy == 'Iter':
+                file.write(str(IterMax)+" ! IterMax -> Max number of iterations" + "\n")
+                file.write(str(OutMolMol)+" ! OutMolMol -> output frequency" + "\n")
+            if ExitStrategy == 'Time':
+                file.write("{:.15f}".format(TotTime) + " ! TotTime -> Max time of simulation in seconds" + "\n")
+                file.write("{:.15f}".format(OutTime) + " ! OutTime -> Delta Time between consecutive print, in seconds" + "\n")
+
+            # file.write("10000   ! exit_zeta strategy after lenz=500 " + "\n")        
+
+            file.write(RunType+" ! RunType. R = truly random . T = not so random (use this for regression tests). C = continuation run" + "\n")
+            file.write(str(IDUM)+" ! Random seed" + "\n")
+            file.write(savefinalstateflag+" ! Save final state" + "\n")
+            if SaveFinalState:
+                file.write(path+'/'+restartfilename + "\n") # do not put comments here, only the path
+            file.write(savecooflag+" ! Save final Coor" + "\n")
+            if SaveCoo: # For LA this must be T
+                if driver == None: 
+                    file.write(path+'/'+coofilename + "\n") # do not put comments here, only the path
+                else:
+                    file.write('None' + "\n") # do not put comments here, only the path
+
+            # Probabilities
+            if Simulation == 'ST' and useProbTable:
+                file.write(ProbTable + "\n") # do not put comments here, only the path
+            else:
+                mulskipsProbThreshold = 5e-12
+                count=0
+                for indsp in range(NCrystal):
+                    for ind in mp.indices():
+                        stringa = ''.join([str(s) for s in ind])
+                        indd = tuple(np.insert(ind, 0, indsp))
+                        if PtransE[indd] < mulskipsProbThreshold: print(f'\nWARNING: PtransE[{indd}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                        prob = np.amax([mulskipsProbThreshold, PtransE[indd]]) # ensures all probs are above minimum threshold in fortran
+                        file.write("{} {} {} ! PtransE[{},{}] \n".format(indsp+1, stringa, prob, indsp+1, ind))
+                        count+=1
+                print('Number of evaporation probabilities: ', count)
+                for indsp in range(NCrystal):
+                    for ii in range(3):
+                        if PtransD[indsp,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransD[{indsp},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                        prob = np.amax([mulskipsProbThreshold, PtransD[indsp,ii]]) # ensures all probs are above minimum threshold in fortran
+                        file.write("{} {} {} ! PtransD[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
+                if NCov!=0:
+                    for indsp in range(NCrystal,NCrystal+NCov):
+                        for ii in range(3):
+                            if PtransAbs[indsp-NCrystal,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransAbs[{indsp-NCrystal},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                            prob = np.amax([mulskipsProbThreshold, PtransAbs[indsp-NCrystal,ii]]) # ensures all probs are above minimum threshold in fortran
+                            file.write("{} {} {} ! PtransAbs[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
+                    for indsp in range(NCrystal,NCrystal+NCov):
+                        for ii in range(3):
+                            if PtransDes[indsp-NCrystal,ii] < mulskipsProbThreshold: print(f'\nWARNING: PtransDes[{indsp-NCrystal},{ii}] < mulskipsProbThreshold={mulskipsProbThreshold} --> Setting it to mulskipsProbThreshold... \n')
+                            prob = np.amax([mulskipsProbThreshold, PtransDes[indsp-NCrystal,ii]]) # ensures all probs are above minimum threshold in fortran
+                            file.write("{} {} {} ! PtransDes[{},{}] \n".format(indsp+1, ii+1, prob, indsp+1,ii+1))
+            file.close() 
+            print("DONE writing start.dat")
+            return
+
+        # Wrote out start.dat in runpath
+        print_file_input()
+
+        ## Save calibration parameters to txt file                       
+        with open('calibration_params.txt', 'w') as ff:
+            ff.write('Calibration parameters:\n')
+            for key, value in mp.calibration_params.items():
+                ff.write(' {} \t--> {}\n'.format(key, value))
 
 
     print('DONE MulSKIPs setup. ETA: {} sec'.format(time.time()-t0))
