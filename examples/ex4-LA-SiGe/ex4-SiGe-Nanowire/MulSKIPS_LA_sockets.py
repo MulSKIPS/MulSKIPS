@@ -569,7 +569,7 @@ if socketsON:
     outputfile_KMC = 'log.mulskips.out'
 
     # Apro il socket
-    from pymulskips_sockets.sockets import Driver, InterfaceSocket, Status
+    from pymulskips.sockets import Driver, InterfaceSocket, Status
     server = InterfaceSocket(port=port)
     server.open()
     """ Ora apro una nuova shell (che resterà aperta) in cui eseguo IL DRIVER (mulskips),

@@ -534,7 +534,7 @@ if socketsON:
     outputfile_KMC = 'log.mulskips.out'
 
     # Apro il socket
-    from pymulskips_sockets.sockets import Driver, InterfaceSocket, Status
+    from pymulskips.sockets import Driver, InterfaceSocket, Status
     server = InterfaceSocket(port=port)
     server.open()
     """ Ora apro una nuova shell (che resterà aperta) in cui eseguo IL DRIVER (mulskips),
@@ -632,7 +632,7 @@ while t <= t_stop:
                 OutTime=MaxTime_KMC/Nframes, TotTime=MaxTime_KMC, ExitStrategy='Time', \
                 cadfilename=None, tempfilename=None, \
                 SaveCoo=True, coofilename=None, \
-                LenVac=LenVac, LenNuc=LenNuc, homogeneous=True, LenSiGe=SiGe_thickness*10, \
+                LenVac=LenVac, LenNuc=LenNuc, initialState='homogeneous', LenSiGe=SiGe_thickness*10, \
                 SaveFinalState=False, restartfilename=None)
         MPI.barrier(comm)
 
