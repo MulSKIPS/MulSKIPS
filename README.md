@@ -52,7 +52,7 @@ Please find documentation [here](https://mulskips.readthedocs.io/en/latest/index
 
 [4] G. Calogero, D. Raciti, P. Acosta-Alba, F. Cristiano, I. Deretzis, G. Fisicaro, K. Huet, S. Kerdilès, A. Sciuto and A. La Magna, "Multiscale modeling of ultrafast melting phenomena", npj Computational Materials 8, 36 (2022), doi: 10.1038/s41524-022-00720-y
 
-[5] G. Calogero, D. Raciti, D. Ricciarelli, P. Acosta-Alba, F. Cristiano, R. Daubriac, R. Demoulin, I. Deretzis, G. Fisicaro, J.-M. Hartmann, S. Kerdilés, A. La Magna, "Multiscale modelling of ultrafast melting and structural disorder in group IV alloys" (submitted)
+[5] G. Calogero, D. Raciti, D. Ricciarelli, P. Acosta-Alba, F. Cristiano, R. Daubriac, R. Demoulin, I. Deretzis, G. Fisicaro, J.-M. Hartmann, S. Kerdilés, A. La Magna, "Atomistic insights into ultrafast SiGe nanoprocessing" (submitted)
 
 <!--
 block comment
