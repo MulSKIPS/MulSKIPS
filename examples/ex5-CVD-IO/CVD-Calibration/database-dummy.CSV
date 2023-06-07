@@ -1,0 +1,7 @@
+Label,Temperature_celsius,ptot_torr,sccm_H2,sccm_HCl,sccm_DCS,time_s,grown_thickness_micron
+Exp1,1060,11,1111,111,11,2500,0
+Exp1,1080,11,1111,111,11,2500,1
+Exp1,1100,11,1111,111,11,2500,2
+Exp1,1120,11,1111,111,11,2500,3
+Exp1,1140,11,1111,111,11,2500,4
+Exp1,1160,11,1111,111,11,2500,5
