@@ -64,7 +64,7 @@ calibration = {
 'scalef': 1.597677326882467e-19, # non-dimensional 
 'scalefcov': 1.597677326882467e-19   # non-dimensional 
 }
-mygas= cantera.Solution('CVD_ST.xml')
+mygas= cantera.Solution('cantera_database_MUNDFAB.xml')
 mpclass = process.CVD(process_data, calibration_params=calibration, gas=mygas)
 
 
