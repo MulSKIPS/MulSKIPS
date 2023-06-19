@@ -31,7 +31,7 @@
       INTEGER(kind=k10) :: Iter=1, IterOut=0
       INTEGER(kind=k10) :: MaxIter=2100000000
       INTEGER(kind=k10) :: OutMolMol=100000000
-      INTEGER :: framecounter=0
+      INTEGER(kind=k10) :: framecounter=0
       REAL(8) :: MaxTime=100000000.0
       REAL(8) :: OutTime=10000000.0
       INTEGER :: Ind,IndTest
