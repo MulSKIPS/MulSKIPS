@@ -29,6 +29,7 @@ def read_output_files(rundirname, what='undercoordinated'):
 
     print('There are {} \'{}\' files available in {}'.format(len(files), what, rundir))
 
+    files.sort()
     return files
 
 
