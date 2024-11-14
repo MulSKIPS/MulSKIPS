@@ -7,10 +7,8 @@ import os,shutil,subprocess,sys
 # ANALYSIS
 ##### --------------------------------------------------------------------------
 
-def read_output_files(rundirname, what='undercoordinated'):
+def read_output_files(rundir, what='undercoordinated'):
     import glob
-    # get the directory run_name where the mulskips code was run
-    rundir = os.getcwd() +'/'+rundirname
 
     # If what='undercoordinated': Collect all *.xyz files within the run_dir directory 
     # related to the undercoordinated atoms, that are the files I00000000.xyz, I00000001.xyz etc ...
