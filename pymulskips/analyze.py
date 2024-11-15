@@ -207,7 +207,7 @@ def get_surface_height(filename,bin_size=5.0,surface_roughness=20.0):
         return z_ave
 
 def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method='finitediff',
-    plotting=True, savepng=False, Nexclude=2, minframes=None):
+    plotting=True, figname=None, Nexclude=2, minframes=None):
     """
     Growth rate extraction
     The following notebook allows to extract the growth rate from a Super lattice 
@@ -399,11 +399,12 @@ def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method=
             
             # plt.title('Process ID: {}'.format(rundirname[:5]))        
             plt.tight_layout()
-            if savepng:
+            if figname is not None:
                 #rundir = os.getcwd() +'/'+rundirname+'/'
                 #plt.savefig('fig-{}-surface_height-growth_rate-time.png'.format(rundirname[:5]))
-                plt.savefig('fig-{}.png'.format(rundirname))
-            plt.show()
+                plt.savefig('{}.png'.format(figname))
+            else:
+                plt.show()
 
         return gr_ave
             
@@ -476,7 +477,7 @@ def get_coverage(filename, mp=None):
 
 
 
-def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minframes=None, mp=None):
+def analyze_coverage(rundirname, plotting=True, figname=None, Nexclude=2, minframes=None, mp=None):
     
     import matplotlib.pyplot as plt
     import numpy as np
@@ -565,11 +566,12 @@ def analyze_coverage(rundirname, plotting=True, savepng=False, Nexclude=2, minfr
             # plt.title('Process ID: {}'.format(rundirname[:5]))        
             plt.legend(loc=0)
             plt.tight_layout()
-            if savepng:
+            if figname is not None:
                 #rundir = os.getcwd() +'/'+rundirname+'/'
                 #plt.savefig('fig-{}-surface_height-growth_rate-time.png'.format(rundirname[:5]))
-                plt.savefig('fig-{}.png'.format(rundirname))
-            plt.show()
+                plt.savefig('{}.png'.format(figname))
+            else:
+                plt.show()
 
         return coverage_ave
 
