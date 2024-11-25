@@ -28,7 +28,7 @@
       INTEGER x,y,z,x1,y1,z1,IfOcc,Coo,NCoorCorr,CovInd
       INTEGER NumAtTotal,NoEpiBulk,NoEpiSurf,NvoidMerged,NumAtWrong
       INTEGER NumIsWrong,ind_atotype,NumCovTotal
-      INTEGER FN,NumSurfAt,Site(3),i,ic,sitec(3),NextN(3,4)
+      INTEGER FN,NumSurfAt,Site(3),i,j,ic,sitec(3),NextN(3,4)
       REAL(8)     Time
       INTEGER, PARAMETER :: k10 = selected_int_kind(10)
       INTEGER(kind=k10) :: Iter
@@ -63,6 +63,11 @@ C       sf = 4.63/12.0  ! valid only for SiC
 104   FORMAT('O ',F10.5,' ',F10.5,' ',F10.5,'  ',F6.2)
 105   FORMAT('H ',F10.5,' ',F10.5,' ',F10.5,'  ',F6.2)
 106   FORMAT('Cl ',F10.5,' ',F10.5,' ',F10.5,'  ',F6.2)
+121   FORMAT('Mg ',F10.5,' ',F10.5,' ',F10.5,' # SV (Si vacancy)')
+122   FORMAT('He ',F10.5,' ',F10.5,' ',F10.5,' # CV (C vacancy)')
+123   FORMAT('Ne ',F10.5,' ',F10.5,' ',F10.5,' # SAV (Si antisite vac)')
+124   FORMAT('Be ',F10.5,' ',F10.5,' ',F10.5,' # CAV (C antisite vac)')
+125   FORMAT('Ar ',F10.5,' ',F10.5,' ',F10.5,' # surrounded by 2C-2Si')
 
 
       ! Get total number of various particle types
@@ -184,7 +189,7 @@ C       sf = 4.63/12.0  ! valid only for SiC
               ELSE IF(ListCrystal(IAt).EQ.5)THEN
                 WRITE(FN,101)sf*x,sf*y,sf*z !, rad
               ELSE
-                WRITE(*,*)'ERROR: 2nd crystal specie can only be C/Ge'
+                WRITE(*,*)'ERROR: 2nd crystal specie can only be C/Ge/B'
                 STOP
               END IF
             END IF
@@ -200,7 +205,7 @@ C       sf = 4.63/12.0  ! valid only for SiC
               ELSE IF(ListCrystal(IAt).EQ.5)THEN
                 WRITE(FN,101)sf*x,sf*y,sf*z !, rad
               ELSE
-                WRITE(*,*)'ERROR: 2nd crystal specie can only be C/Ge'
+                WRITE(*,*)'ERROR: 2nd crystal specie can only be C/Ge/B'
                 STOP
               END IF
             END IF
@@ -227,7 +232,31 @@ C       sf = 4.63/12.0  ! valid only for SiC
         x = ListVoid (i) % AtomXYZ(1)
         y = ListVoid (i) % AtomXYZ(2)
         z = ListVoid (i) % AtomXYZ(3)
-        WRITE(FN+4,104)sf*x,sf*y,sf*z !, rad
+        ! only for SiC PVD. In CVD or doped cases we do not distinguish point defects for now...
+        IF(NCov.EQ.0.AND.NCrystal.EQ.2.AND.ListCrystal(2).EQ.6)THEN 
+          NextN = ListVoid(i) % NextNXYZ
+          IAt=0
+          DO j=1,4
+            IAt=IAt+IBITS(LattCoo(NextN(1,j),NextN(2,j),NextN(3,j)),
+     >        PosSiC,LenSiC)
+          END DO
+          IF(IAt.EQ.4)THEN
+            WRITE(FN+4,121)sf*x,sf*y,sf*z
+          ELSE IF(IAt.EQ.8)THEN
+            WRITE(FN+4,122)sf*x,sf*y,sf*z
+          ELSE IF(IAt.EQ.7)THEN
+            WRITE(FN+4,123)sf*x,sf*y,sf*z
+          ELSE IF(IAt.EQ.5)THEN
+            WRITE(FN+4,124)sf*x,sf*y,sf*z
+          ELSE IF(IAt.EQ.6)THEN
+            WRITE(FN+4,125)sf*x,sf*y,sf*z
+          ELSE
+            WRITE(*,*)'ERROR: Weird Defect type was formed...ABORTING'
+            STOP
+          END IF
+        ELSE
+          WRITE(FN+4,104)sf*x,sf*y,sf*z !, rad
+        END IF
       END DO
 
 
