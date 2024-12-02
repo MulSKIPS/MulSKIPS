@@ -63,11 +63,11 @@ C       sf = 4.63/12.0  ! valid only for SiC
 104   FORMAT('O ',F10.5,' ',F10.5,' ',F10.5,'  ',F6.2)
 105   FORMAT('H ',F10.5,' ',F10.5,' ',F10.5,'  ',F6.2)
 106   FORMAT('Cl ',F10.5,' ',F10.5,' ',F10.5,'  ',F6.2)
-121   FORMAT('Mg ',F10.5,' ',F10.5,' ',F10.5,' # SV (Si vacancy)')
-122   FORMAT('He ',F10.5,' ',F10.5,' ',F10.5,' # CV (C vacancy)')
+121   FORMAT('Mg ',F10.5,' ',F10.5,' ',F10.5,' # CV (Si vacancy)')
+122   FORMAT('He ',F10.5,' ',F10.5,' ',F10.5,' # SV (C vacancy)')
 123   FORMAT('Ne ',F10.5,' ',F10.5,' ',F10.5,' # SAV (Si antisite vac)')
 124   FORMAT('Be ',F10.5,' ',F10.5,' ',F10.5,' # CAV (C antisite vac)')
-125   FORMAT('Ar ',F10.5,' ',F10.5,' ',F10.5,' # surrounded by 2C-2Si')
+125   FORMAT('Ar ',F10.5,' ',F10.5,' ',F10.5,' # XV (near 2C and 2Si)')
 
 
       ! Get total number of various particle types
