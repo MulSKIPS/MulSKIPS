@@ -298,7 +298,7 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
                 file.write('{} ! Atomic numbers of coverage species \n'.format(' '.join([str(x) for x in mp.listcovZ])))
             file.write(Simulation+" ! Initstat: S Sphere, C Parellelepipid, F Flat SiC-3C(100) surface, FS Flat Si(100) surface, A APB, I inverted pyramid, D inverted pyramid of C, Z inverted pyramid of Si, J inverted pyramid with APB, Fw Flat SiC(100) surface with walls, Fa Flat SiC(100) surface with aperture, SL Si(100) liquid-solid interface, FF FinFET Si (100) liquid-solid, SS Sphere Si liquid-solid" +  "\n")
             
-            if Simulation == 'IN':
+            if Simulation == 'IN' or 'SH':
                 file.write(path+'/'+cadfilename + "\n") # do not put comments here, only the path 
             elif Simulation == 'LA':
                 if driver == None:

@@ -11,7 +11,7 @@ cd /your_MulSKIPS_directory/mulskips-source/
 make 
 ```
 
-If something goes wrong, please double check (and edit, if needed) the makefile, and ensure that your GNU Fortran compiler (gfortran or f95) is updated (tested version >= 9.4.0).
+If something goes wrong, please double check (and edit, if needed) the makefile, and ensure that your GNU Fortran compiler (gfortran or f95) is updated (tested version >= 9.4.0). Please note that if you are using an arm64 architecture you will need to replace -mcmodel=medium with -mcmodel=small in the FFLAGS line of the makefile.  
 A successful compilation will generate a "mulskips.e" executable file in the /your_MulSKIPS_directory/mulskips-source/ directory.
 
 - To run a simulation, go to your working directory, use pymulskips routines to generate a "start.dat" file with all simulation parameters, then simply call  /your_MulSKIPS_directory/mulskips.e  

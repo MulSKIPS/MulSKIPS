@@ -112,7 +112,7 @@
         IF(Ttop.EQ.Tbottom)THEN
           fixedT = .TRUE.
         END IF
-      ELSE IF(InitSt.EQ.'IN')THEN
+      ELSE IF(InitSt.EQ.'IN'.OR.InitSt.EQ.'SH')THEN
         READ(IPF,'(A)')cadfilename
       ELSE IF(InitSt.EQ.'LA')THEN
         write(*,*)'****** MulSKIPs run for laser annealing ******'
@@ -275,7 +275,7 @@
          Len3=Len3-MOD(Len3,24) 
          Len4=Len4-MOD(Len4,24) 
          CALL SetSiFINFET(Len1,Len2,Len3,Len4) ! Len1: init Slab height. Len2: wall bottom. Len3: wall top. Len4: aperture size along x.
-      ELSE IF(InitSt.EQ.'IN')THEN
+      ELSE IF(InitSt.EQ.'IN'.OR.InitSt.EQ.'SH')THEN
          CALL SetCAD()
       ELSE IF(InitSt.EQ.'LA')THEN
          tmax=0

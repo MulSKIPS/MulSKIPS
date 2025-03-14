@@ -30,6 +30,8 @@
       INTEGER Id,CovInd,OccN,Occ,IAt,CovIndN,Coor,CoorNN
       INTEGER SiteSiC(3),Site(3),SiteGr(3),NNSite(3)
       INTEGER NextN(3,4),NBuff(3)
+      INTEGER NFilled,ia
+      CHARACTER(Len=2) :: sym
 
       INTEGER :: Index_Event
       REAL(8) :: Prob
@@ -102,97 +104,133 @@
          END DO
         END DO                   
 
-        write(*,*)'Reading input geometry file: ', cadfilename
+
         IPF50=50
-        OPEN(IPF50,FILE=cadfilename,STATUS='OLD')     
-        ! read and ignore lines in cadfilename which relate to z of wall sites
-        DO z=0,3
-          READ(IPF50,*)LenIn 
-        END DO  
-        ! Now start reading properly cadfilename           
-        DO z=4,LenZ-5
-          READ(IPF50,*)LenIn
-          DO y=0,LenY-1
-            DO x=0,LenX-1
-              Id = LenIn(1+x+LenX*y)
-              ! Set walls
-              IF(Id.EQ.10)THEN ! WALL, AIR, SiO2
-                LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
-                CovInd=113 
-                CALL MVBITS(CovInd,0,LenIndex,LattCoo(x,y,z),PosIndex)
-            ! Set species
-              ELSE IF(Id.EQ.1)THEN ! Si  
-  !                 ELSE IF(Id.NE.0)THEN! Si  
-                IF(MOD(x,3).EQ.0.AND.MOD(y,3).EQ.0
+        IF(InitSt.EQ.'SH')THEN
+          
+          write(*,*)'Reading input geometry file (SHAPE): ', cadfilename
+          OPEN(IPF50,FILE=cadfilename,STATUS='OLD')     
+          ! read number of elements to be filled
+          READ(IPF50,*)NFilled
+          ! skip second line
+          READ(IPF50,*)
+          ! Now start reading indices and filling with Si or C           
+          DO ia=1,NFilled
+            READ(IPF50,*)sym,x,y,z
+            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
+            IF(sym.EQ.'Si')THEN
+                LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
+            ELSE IF(sym.EQ.'C')THEN
+                LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+            END IF
+          END DO
+
+        ELSE
+
+          write(*,*)'Reading input geometry file (MESH): ', cadfilename
+          OPEN(IPF50,FILE=cadfilename,STATUS='OLD')     
+          ! read and ignore lines in cadfilename which relate to z of wall sites
+          DO z=0,3
+            READ(IPF50,*)LenIn 
+          END DO  
+          ! Now start reading properly cadfilename           
+          DO z=4,LenZ-5
+            READ(IPF50,*)LenIn
+            DO y=0,LenY-1
+              DO x=0,LenX-1
+                Id = LenIn(1+x+LenX*y)
+                ! Set walls
+                IF(Id.EQ.10)THEN ! WALL, AIR, SiO2
+                  LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
+                  CovInd=113 
+                  CALL MVBITS(CovInd,0,LenIndex,LattCoo(x,y,z),PosIndex)
+              ! Set species
+                ELSE IF(Id.EQ.1)THEN ! Si  
+                  IF(MOD(x,3).EQ.0.AND.MOD(y,3).EQ.0
      >                  .AND.MOD(z,3).EQ.0)THEN
-                  x1=x/3
-                  y1=y/3
-                  z1=z/3
-                  IF((MOD(x1,2).EQ.MOD(y1,2)).AND.
-     >                  (MOD(x1,2).EQ.MOD(z1,2)))THEN
-                    IF((MOD(x1+y1+z1,4).EQ.0).OR.
-     >                     (MOD(x1+y1+z1,4).EQ.3))THEN ! Si sites                    
-                      IF(InitSt.EQ.'LA')THEN
-                        ! we need to nucleate at least 2 nm of liquid
-                        IF(Homogeneous.EQ.'T')THEN
-                        ! here we do it homogeneously as a thin layer
-                          IF(z.LE.(LenZ-INT((LenVac+LenNuc)/sf)))THEN 
-                            ! LenVac + LenNucleus in [ang]
-                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
-                            IF(z.LE.(LenZ-INT((LenVac+LenSiGe)/sf)))THEN
-                              rr = 1.0   ! choose Si
-                            ELSE
-                              rr = RAND()
-                            END IF           
-                            IF(rr.GE.alloyfraction)THEN
-                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
-                            ELSE
-                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+                    x1=x/3
+                    y1=y/3
+                    z1=z/3
+                    IF((MOD(x1,2).EQ.MOD(y1,2)).AND.
+     >                 (MOD(x1,2).EQ.MOD(z1,2)))THEN
+                      IF((MOD(x1+y1+z1,4).EQ.0).OR.
+     >                   (MOD(x1+y1+z1,4).EQ.3))THEN ! Si sites                    
+                        IF(InitSt.EQ.'LA')THEN
+                          ! we need to nucleate at least 2 nm of liquid
+                          IF(Homogeneous.EQ.'T')THEN
+                          ! here we do it homogeneously as a thin layer
+                            IF(z.LE.(LenZ-INT((LenVac+LenNuc)/sf)))THEN 
+                              ! LenVac + LenNucleus in [ang]
+                              LattCoo(x,y,z)
+     >                         =IBSET(LattCoo(x,y,z),PosOcc)
+                              IF(z.LE.(LenZ-INT((LenVac+LenSiGe)/sf)))
+     >                         THEN
+                                rr = 1.0   ! choose Si
+                              ELSE
+                                rr = RAND()
+                              END IF           
+                              IF(rr.GE.alloyfraction)THEN
+                                LattCoo(x,y,z)
+     >                           =IBSET(LattCoo(x,y,z),PosSi)
+                              ELSE
+                                LattCoo(x,y,z)
+     >                           =IBSET(LattCoo(x,y,z),PosC)
+                              END IF
                             END IF
-                          END IF
-                        ELSE IF(Homogeneous.EQ.'F')THEN
-                        ! here instead we do it dishomogeneously, starting from a semi-spherical nucleus of radius LenNuc (Ang)
-                          x0 = INT(LenX/2)
-                          y0 = INT(LenY/2)
-                          z0 = LenZ-INT(LenVac/sf)
-                          IF(((x-x0)*(x-x0)+(y-y0)*(y-y0)+(z-z0)*(z-z0))
-     >                        .GT.(INT((LenNuc/sf)*(LenNuc/sf))))THEN 
-                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
-                            IF(z.LE.(LenZ-INT((LenVac+LenSiGe)/sf)))THEN
-                              rr = 1.0   ! choose Si
-                            ELSE
-                              rr = RAND()
-                            END IF           
-                            IF(rr.GE.alloyfraction)THEN
-                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
-                            ELSE
-                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+                          ELSE IF(Homogeneous.EQ.'F')THEN
+                          ! here instead we do it dishomogeneously, starting from a semi-spherical nucleus of radius LenNuc (Ang)
+                            x0 = INT(LenX/2)
+                            y0 = INT(LenY/2)
+                            z0 = LenZ-INT(LenVac/sf)
+                            IF(((x-x0)*(x-x0)
+     >                          +(y-y0)*(y-y0)
+     >                          +(z-z0)*(z-z0))
+     >                          .GT.(INT((LenNuc/sf)*(LenNuc/sf))))THEN 
+                              LattCoo(x,y,z)
+     >                         =IBSET(LattCoo(x,y,z),PosOcc)
+                              IF(z.LE.(LenZ-INT((LenVac+LenSiGe)/sf)))
+     >                         THEN
+                                rr = 1.0   ! choose Si
+                              ELSE
+                                rr = RAND()
+                              END IF           
+                              IF(rr.GE.alloyfraction)THEN
+                                LattCoo(x,y,z)
+     >                           =IBSET(LattCoo(x,y,z),PosSi)
+                              ELSE
+                                LattCoo(x,y,z)
+     >                           =IBSET(LattCoo(x,y,z),PosC)
+                              END IF
                             END IF
+                          ELSE
+                            WRITE(*,*)'ERROR: Homogeneous needs to be ei
+     >ther T or F'
                           END IF
-                        ELSE
-                          WRITE(*,*)'ERROR: Homogeneous needs to be eith
-     >er T or F'
-                        END IF
-                      ELSE IF(InitSt.EQ.'IN')THEN
-                        LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
-                        rr = RAND()
-                        IF(rr.GE.alloyfraction)THEN
-                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
-                        ELSE
-                            LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+                        ELSE IF(InitSt.EQ.'IN')THEN
+                          LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosOcc)
+                          rr = RAND()
+                          IF(rr.GE.alloyfraction)THEN
+                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosSi)
+                          ELSE
+                              LattCoo(x,y,z)=IBSET(LattCoo(x,y,z),PosC)
+                          END IF
                         END IF
                       END IF
-                    END IF
+                    END IF  
                   END IF  
-                END IF  
-              END IF 
+                END IF 
 
+              END DO
             END DO
           END DO
-        END DO
+
+        END IF
+        
         CLOSE(IPF50)
         write(*,*)'Done reading input geometry file'
-        
+
+
+
         !  Set the coordination
         DO z=0,LenZ-1
          DO y=0,LenY-1

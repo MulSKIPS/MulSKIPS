@@ -379,7 +379,7 @@ def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method=
         if plotting:
             # Here we plot the surface height as a zsurfave  as function of the KMC steps and the process time
             plt.figure(figsize=(10,4))
-            plt.rcParams.update({'font.size': 14})
+            #plt.rcParams.update({'font.size': 14})
             plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0))
             plt.subplot(121)
             plt.plot(time_list,all_surface_heights, 'k-')
@@ -555,7 +555,7 @@ def analyze_coverage(rundirname, plotting=True, figname=None, Nexclude=2, minfra
             colors = {'Cl':'b', 'H':'g'}
             # Here we plot the surface height as a zsurfave  as function of the KMC steps and the process time
             plt.figure(figsize=(10,4))
-            plt.rcParams.update({'font.size': 14})
+            #plt.rcParams.update({'font.size': 14})
             plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0))
             for key in all_surface_coverage:
                 plt.plot(time_list, all_surface_coverage[key], '-o', color=colors[key], label=key, alpha=0.5)
