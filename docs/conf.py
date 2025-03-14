@@ -14,6 +14,7 @@ import os
 import sys
 from datetime import date
 import sphinx_rtd_theme
+sys.path.insert(0, os.path.abspath('./source'))
 #sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
@@ -46,6 +47,8 @@ exclude_patterns = []
 
 # The master toctree document.
 master_doc = 'index'
+
+source_suffix = ['.rst', '.md']
 
 # -- Options for HTML output -------------------------------------------------
 
