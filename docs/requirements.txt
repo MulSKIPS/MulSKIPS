@@ -1,2 +1,4 @@
 sphinxcontrib-bibtex
 sphinx_rtd_theme
+requests>=2.25.0
+packaging>=21.0
