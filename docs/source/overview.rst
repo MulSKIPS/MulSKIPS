@@ -3,6 +3,11 @@ The MulSKIPS code
 
 `MulSKIPS` is a Kinetic Monte Carlo super-Lattice code, designed to study with an atomic resolution
 the growth kinetics of elements, alloys and compounds characterized by the sp3 bond symmetry.
+It can simulate generation and evolution of point and extended defects (e.g. stacking faults), 
+as well as the symultaneous evolution of multiple crystalline phases (e.g. cubic and hexagonal) during the process. 
+Basic geometries (surfaces, nanocrystals) or complex TCAD meshes can be used as input. 
+Setup and post-processing is managed by the user-friendly Python module ```pymulskips```.
+
 The code is open source and it is distributed according to the GNU public license.
 MulSKIPS is available on GitHub_, from where it can be downloaded as a tar file.
 
