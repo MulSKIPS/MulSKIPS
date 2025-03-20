@@ -411,7 +411,7 @@ def run_mulskips(execpath=None, runpath=None, Simulation=None, mp=None,
         t0 = time.time()
 
         # Full path of the compiled mulskips executable:
-        mulskipsexecutable = execpath+'/mulskips.e | tee log.txt;'
+        mulskipsexecutable = execpath+"/mulskips.e | tee log.txt;"
         print ("The executable directory is %s" % execpath)
 
         endok = True

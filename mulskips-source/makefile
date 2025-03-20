@@ -17,7 +17,7 @@ $(INITDIR)/SetAPB.f  $(INITDIR)/SetInvPC.f    $(INITDIR)/SetInvPwAPB.f $(INITDIR
 $(INITDIR)/SetAPBSym.f $(INITDIR)/SetInvP.f  $(INITDIR)/SetInvPwOnlyCorSi.f  $(INITDIR)/SetSiC3C.f \
 $(INITDIR)/SetSiCSF.f $(INITDIR)/SetSiGex.f \
 $(INITDIR)/SetSiC3Cww.f $(INITDIR)/SetSiC3Cwwaperture.f $(INITDIR)/SetSi.f $(INITDIR)/SetSiFINFET.f \
-$(INITDIR)/SetCAD.f $(INITDIR)/SetT.f \
+$(INITDIR)/SetCAD.f $(INITDIR)/SetT.f $(INITDIR)/SetShape.f\
 $(INITDIR)/SetAPBSymZimb1.f  $(INITDIR)/SetInvPOff.f  $(INITDIR)/SetInvPwOnlySiorC.f \
 $(INITDIR)/SetTrenchSi.f $(INITDIR)/SetTrench.f $(INITDIR)/SetAPBSymZimb.f   $(INITDIR)/SetInvPSi.f   $(INITDIR)/SetNC.f \
 $(INOUDIR)/FileClose.f  $(INOUDIR)/GetOutputFileName.f  $(INOUDIR)/WriteMolMolXYZFile.f $(INOUDIR)/FileOpen.f $(INOUDIR)/WriteMolMolSource.f \

@@ -43,6 +43,7 @@
       INTEGER :: LenSaveOut(LenX*LenY)
       REAL(8) :: angle ! degrees
       REAL(8) :: Ttop, Tbottom ! Kelvin
+      INTEGER :: NFilled
 
 ! Random NumBer
       REAL(8) :: Pi=3.1415926535897932384626433832795028841971
@@ -275,8 +276,14 @@
          Len3=Len3-MOD(Len3,24) 
          Len4=Len4-MOD(Len4,24) 
          CALL SetSiFINFET(Len1,Len2,Len3,Len4) ! Len1: init Slab height. Len2: wall bottom. Len3: wall top. Len4: aperture size along x.
-      ELSE IF(InitSt.EQ.'IN'.OR.InitSt.EQ.'SH')THEN
+      ELSE IF(InitSt.EQ.'IN')THEN
          CALL SetCAD()
+      ELSE IF(InitSt.EQ.'SH')THEN
+         ! read number of filled sites in shape and pass it to SetShape
+         OPEN(50,FILE=cadfilename,STATUS='OLD')     
+         READ(50,*)NFilled
+         CLOSE(50)
+         CALL SetShape(NFilled)
       ELSE IF(InitSt.EQ.'LA')THEN
          tmax=0
          CALL SetT()  ! do this first to allocate T, which will be used in Get_Prob_Ini in SetCAD

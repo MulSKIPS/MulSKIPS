@@ -24,7 +24,7 @@
 !     LenX,LenY,LenZ:    Dimensioni del sistema
 !     LattCoo      :    Numero Di Coordinazione Relativo al Sito
 !     LattInd       :    Indice del Sito nel vettore Listporb
-       INTEGER, PARAMETER :: LenX=240, LenY=240, LenZ=780
+       INTEGER, PARAMETER :: LenX=696, LenY=696, LenZ=696
        INTEGER, PARAMETER :: LenXGr=4*LenX/3,LenYGr=2*LenY/3
        INTEGER :: Nedge=-1
        INTEGER, PARAMETER :: NSites=LenX*LenY*LenZ

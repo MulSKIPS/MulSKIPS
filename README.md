@@ -1,5 +1,5 @@
 ## [MulSKIPS](https://mulskips.readthedocs.io/en/latest/index.html) ##
-A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resolution the kinetics of processes (e.g., PVD, CVD, laser annealing) involving elements, alloys and compounds characterized by the sp3 bond symmetry
+A Kinetic Monte Carlo super-Lattice code, designed to simulate with atomic resolution the kinetics of processes (e.g., PVD, CVD, laser annealing) involving elements, alloys and compounds characterized by the sp3 bond symmetry. It can simulate generation and evolution of point and extended defects (e.g. stacking faults), as well as the symultaneous evolution of multiple crystalline phases (e.g. cubic and hexagonal) during the process. Basic geometries (surfaces, nanocrystals) or complex TCAD meshes can be used as input. Setup and post-processing is managed by the user-friendly Python module ```pymulskips``` (see examples in the repository).
 
 ## Installation ##
 
