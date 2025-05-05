@@ -207,7 +207,7 @@ def get_surface_height(filename,bin_size=5.0,surface_roughness=20.0):
         return z_ave
 
 def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method='finitediff',
-    plotting=True, figname=None, Nexclude=2, minframes=None):
+    plotting=True, figname=None, Nexclude=2, minframes=None, return_surf_height=False):
     """
     Growth rate extraction
     The following notebook allows to extract the growth rate from a Super lattice 
@@ -264,6 +264,7 @@ def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method=
             surface_height  = get_surface_height(file, bin_size, surface_roughness)
             all_surface_heights.append(surface_height)
         # print(all_surface_heights)
+        all_surface_heights = np.array(all_surface_heights)
 
         """
         Here we extract the KMC time from the run output. 
@@ -379,8 +380,8 @@ def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method=
         if plotting:
             # Here we plot the surface height as a zsurfave  as function of the KMC steps and the process time
             plt.figure(figsize=(10,4))
-            #plt.rcParams.update({'font.size': 14})
-            plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0))
+            plt.rcParams.update({'font.size': 14})
+            #plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0))
             plt.subplot(121)
             plt.plot(time_list,all_surface_heights, 'k-')
             if method != 'finitediff':
@@ -405,8 +406,12 @@ def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method=
                 plt.savefig('{}.png'.format(figname))
             else:
                 plt.show()
-
-        return gr_ave
+            plt.close()
+        
+        if return_surf_height:
+            return gr_ave, all_surface_heights
+        else:
+            return gr_ave
             
 
 # Main function of the notebook to get the coverage out of the xyz
@@ -555,7 +560,7 @@ def analyze_coverage(rundirname, plotting=True, figname=None, Nexclude=2, minfra
             colors = {'Cl':'b', 'H':'g'}
             # Here we plot the surface height as a zsurfave  as function of the KMC steps and the process time
             plt.figure(figsize=(10,4))
-            #plt.rcParams.update({'font.size': 14})
+            plt.rcParams.update({'font.size': 14})
             plt.ticklabel_format(axis='x',style='sci',scilimits=(0,0))
             for key in all_surface_coverage:
                 plt.plot(time_list, all_surface_coverage[key], '-o', color=colors[key], label=key, alpha=0.5)
