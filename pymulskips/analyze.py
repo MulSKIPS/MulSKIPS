@@ -581,6 +581,28 @@ def analyze_coverage(rundirname, plotting=True, figname=None, Nexclude=2, minfra
         return coverage_ave
 
 
+def count_vacancies(dirname):
+    import glob
+    # Loop through all files ending with "_v.xyz"
+    keys = ['tot', 'SV', 'CV', 'SAV', 'CAV', 'XV']
+    vac_counts = {k: [] for k in keys}
+    for file_name in glob.glob(dirname+"/*_v.xyz"):
+        if file_name!=dirname+"/I00000000_v.xyz":
+            # Count occurrences of lines matching "SV" or "CV" or "SAV" or "CAV" or "XV"
+            vac_counts['tot'].append(int(subprocess.check_output(f'tail -n +3 "{file_name}" | wc -l', shell=True)))
+            # Count occurrences of lines matching "SV"
+            vac_counts['SV'].append(int(subprocess.check_output(f'grep "SV" "{file_name}" | wc -l', shell=True)))
+            # Count occurrences of lines matching "CV"
+            vac_counts['CV'].append(int(subprocess.check_output(f'grep "CV" "{file_name}" | wc -l', shell=True)))
+            # Count occurrences of lines matching "SAV"
+            vac_counts['SAV'].append(int(subprocess.check_output(f'grep "SAV" "{file_name}" | wc -l', shell=True)))
+            # Count occurrences of lines matching "CAV"
+            vac_counts['CAV'].append(int(subprocess.check_output(f'grep "CAV" "{file_name}" | wc -l', shell=True)))
+            # Count occurrences of lines matching "XV"
+            vac_counts['XV'].append(int(subprocess.check_output(f'grep "XV" "{file_name}" | wc -l', shell=True)))
+    return {k: np.array(v) for k,v in vac_counts.items()}
+
+
 def export_xyz(xyzfile, newfile, alat, what='surface+coverage', DEP3Dfile=None, mesh=None, voff=[0,0,0], reverse_z=False, exclude=[]):
     
     if not what in ['surface', 'coverage', 'surface+coverage']:
