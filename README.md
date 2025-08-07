@@ -18,7 +18,12 @@ A successful compilation will generate a "mulskips.e" executable file in the /yo
 - To use the pymulskips routines in your python script, simply copy the directory /your_MulSKIPS_directory/pymulskips/ into your working directory.
 In alternative, you can add /your_MulSKIPS_directory/pymulskips/ to your PYTHONPATH environment variable.
 - The pymulskips module needs a lot of dependencies. 
-The required versions of these dependencies may vary with the installed version of dolfin.
+Note that dolfin is required only to use the io.py module for interactions with meshes and PDE solvers (e.g., for laser annealing). 
+In fact, dolfin will be searched for only if you try to import the pymulskips.io module.
+If you choose to install dolfin, you should install the legacy version 2019.1.0, which was released in April 2019:
+https://fenicsproject.org/download/archive/
+MulSKIPS and some of its dependencies do not work with dolfinx.
+The required versions of the other dependencies may vary with the installed version of dolfin.
 If you installed dolfin through CONDA, please note that the following dependencies were successfully tested (install them using the following command):
 ```
 pip3 install -r /your_MulSKIPS_directory/pymulskips/requirements_condadolfin.txt
