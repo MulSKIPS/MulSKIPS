@@ -104,7 +104,7 @@ class PVD():
                     calibration_params = {
                         'fact_D_Si' : [1.10546, 0.276365, 44.2184],
                         'fact_D_C' : [200.0, 2.5, 400.0],
-                        'scalef' : 0.43 # this can be the param flag to vary to calibrate
+                        'scalef' : 0.46 # this can be the param flag to vary to calibrate
                         }
             else:
                 print('ERROR: PVD process for substrate {} with precursors {} is not implemented'.format(self.substrate, self.precursors))
