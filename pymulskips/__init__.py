@@ -10,7 +10,7 @@ from . import setuprun
 from . import analyze
 from . import sockets
 
-# import "io" submodule only if dolfin is available
+# import "process" submodule only if dolfin is available
 import warnings
 try:
     import cantera
@@ -26,5 +26,5 @@ try:
     from . import io
 except ImportError:
     # dolfin is not installed
-    warnings.warn("The 'io' submodule could not be imported because the 'dolfin' package is not installed. The others were imported successfully.")
+    warnings.warn("The 'io' submodule could not be imported because the 'dolfin' package is not installed or there is some other problem. The others were imported successfully.")
     pass

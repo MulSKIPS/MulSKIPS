@@ -11,7 +11,8 @@ Jean-Michel Hartmann, Sébastien Kerdilés, Antonino La Magna
 To run the simulations, you should:
 - Make sure you installed all the dependencies (see below)
 - Make sure you copied the pymulskips directory in this folder, or added it to your PYTHONPATH
-- Make sure you updated the "execpath" variable in run.py with your mulskips-source directory FULL path
+- Make sure you updated the "execpath" variable in MulSKIPS_LA_sockets.py with your mulskips-source directory FULL path.
+By default, it look for mulskips-source in the current directory. For development purposes, it is recommended you copy the mulskips-source-LaserAnnealing directory in the current directory and rename it to mulskips-source, without editing execpath in MulSKIPS_LA_sockets.py.
 
 - Use the following command to construct the msh file from the geo file located in each folder:
 ```

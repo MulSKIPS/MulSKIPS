@@ -22,7 +22,7 @@ Note that dolfin is required only to use the io.py module for interactions with 
 In fact, dolfin will be searched for only if you try to import the pymulskips.io module.
 If you choose to install dolfin, you should install the legacy version 2019.1.0, which was released in April 2019:
 https://fenicsproject.org/download/archive/
-MulSKIPS and some of its dependencies do not work with dolfinx.
+This is because some of the MulSKIPS' dependencies do not work with dolfinx.
 The required versions of the other dependencies may vary with the installed version of dolfin.
 If you installed dolfin through CONDA, please note that the following dependencies were successfully tested (install them using the following command):
 ```
