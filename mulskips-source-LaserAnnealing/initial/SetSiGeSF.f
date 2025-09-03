@@ -4,7 +4,7 @@
 **   VSF position of the triangle's vertex in the substrate bulk (one Si sites of the conventional cubic
 **   cells)
 **************************************************************************************
-      SUBROUTINE SetSiGeSF(Len,VSF,LenOffset,a)
+      SUBROUTINE SetSiGeSF(Len,VSF,LenOffset)
       USE DefSystem
       USE Definitions
       IMPLICIT NONE
@@ -21,8 +21,6 @@
       INTEGER :: Index_Event, indsp, Id
       REAL(8) :: Prob, rr
       INTEGER :: temperature
-
-      INTEGER, DIMENSION(LenZ,LenX*LenY) :: a
 
       IF(alloyfraction.GT.0)THEN
         write(*,*) 'Setting up a', LenSiGe, 'Angstrom-thick SiGe layer with fraction = ', alloyfraction

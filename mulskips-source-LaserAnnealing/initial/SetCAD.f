@@ -22,7 +22,7 @@
 **
 **
 **************************************************************************************
-      SUBROUTINE SetCAD(a)
+      SUBROUTINE SetCAD()
       USE DefSystem
       USE Definitions
       IMPLICIT NONE
@@ -45,12 +45,7 @@ C       INTEGER :: OPF16,IQstat,Coo,k
 C       INTEGER :: LenOut(LenX*LenY)
 C       !!!!!!!!!!!
 
-
       REAL(8) :: LenIn(LenX*LenY)
-
-      INTEGER, DIMENSION(LenZ,LenX*LenY) :: a
-!      INTEGER, DIMENSION(30,LenX*LenY) :: a
-
 
       IF(alloyfraction.GT.0)THEN
         write(*,*) 'Setting up a', LenSiGe, 'Angstrom-thick SiGe layer with fraction = ', alloyfraction

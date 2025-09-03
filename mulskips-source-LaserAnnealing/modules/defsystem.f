@@ -24,7 +24,7 @@
 !     LenX,LenY,LenZ:    Dimensioni del sistema
 !     LattCoo      :    Numero Di Coordinazione Relativo al Sito
 !     LattInd       :    Indice del Sito nel vettore Listporb
-       INTEGER, PARAMETER :: LenX=600, LenY=600, LenZ=900
+       INTEGER, PARAMETER :: LenX=240, LenY=240, LenZ=3540
        INTEGER, PARAMETER :: LenXGr=4*LenX/3,LenYGr=2*LenY/3
        INTEGER :: Nedge=-1
        INTEGER, PARAMETER :: NSites=LenX*LenY*LenZ
@@ -84,6 +84,11 @@
       REAL(8) :: LenVac, LenNuc
       INTEGER :: tmax
       CHARACTER(Len=2)  :: Homogeneous ! T or F (for LA)
+
+      INTEGER, DIMENSION(LenZ,LenX*LenY) :: a ! geo 
+      INTEGER, DIMENSION(LenZ,LenX*LenY) :: b ! field 
+      INTEGER, DIMENSION(LenZ,LenX*LenY) :: c ! phases 
+      INTEGER, DIMENSION(LenZ,LenX*LenY) :: d ! Ge fraction       
 
        REAL(8) :: EBind=0.8,EBind1=1.,EbindG=2.5,Energ,Enemed
        REAL(8) :: EevapC=2.5,EevapSi=0.5

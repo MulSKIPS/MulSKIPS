@@ -22,7 +22,7 @@
 **
 **
 **************************************************************************************
-      SUBROUTINE SetT(b)  ! Called only if InitSt = 'LA'
+      SUBROUTINE SetT()  ! Called only if InitSt = 'LA'
       USE DefSystem
       USE Definitions
       IMPLICIT NONE
@@ -30,9 +30,6 @@
       INTEGER :: IPF51,temperature
       
       REAL(8) :: LenIn(LenX*LenY)
-
-      INTEGER, DIMENSION(LenZ,LenX*LenY) :: b
-!      INTEGER, DIMENSION(30,LenX*LenY) :: b
 
       IF(tempfilename.EQ.'None')THEN ! array received from sockets
 

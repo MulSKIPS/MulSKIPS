@@ -26,7 +26,7 @@
       IMPLICIT    NONE
       INTEGER, PARAMETER :: k10 = selected_int_kind(10)
       INTEGER(kind=k10) :: Iter
-      INTEGER :: Iout
+      INTEGER(kind=k10) :: Iout
       REAL(8)     Time
       REAL(8), DIMENSION(NCrystalMax) :: diff
 

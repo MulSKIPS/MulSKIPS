@@ -36,7 +36,7 @@
       INTEGER(kind=k10) :: Iter=1, IterOut=0
       INTEGER(kind=k10) :: MaxIter=2100000000
       INTEGER(kind=k10) :: OutMolMol=100000000
-      INTEGER :: framecounter=0
+      INTEGER(kind=k10) :: framecounter=0
       INTEGER :: LAcounter=0
       REAL(8) :: MaxTime=100000000.0
       REAL(8) :: OutTime=10000000.0
@@ -92,21 +92,21 @@
 
 C       real(kind=4) , allocatable :: msgbuffer(:)
       INTEGER, allocatable :: msgbuffer(:) ! if you change type of "a" you need to change this type as well
-
       ! data to send and receive (REMEMBER TO CHANGE ALSO type(msgbuffer)!!!)
-      ! IS THERE A WAY TO AVOID THESE ALLOCATIONS BELOW?
-      INTEGER, DIMENSION(LenZ,LenX*LenY) :: a=0 ! geo 
-      INTEGER, DIMENSION(LenZ,LenX*LenY) :: b=0 ! field 
-      INTEGER, DIMENSION(LenZ,LenX*LenY) :: c=0 ! phases 
-      INTEGER, DIMENSION(LenZ,LenX*LenY) :: d=0 ! Ge fraction 
 
       integer :: ii
 !       integer, allocatable :: sh(:)
 
+      ! initialize socket arrays
+      a=0  ! geo 
+      b=0  ! field 
+      c=0  ! phases 
+      d=0  ! Ge fraction 
+
       ! intialize defaults
       inet = 1
       host = "localhost"//achar(0)
-      port = 31475
+      port = 31452
 
       ! read command arguments
       if (mod(command_argument_count(), 2) /= 0) then
@@ -534,7 +534,7 @@ C                   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
              CALL SetSi(Len1) ! Len1: init Slab height. 
           ELSE IF(InitSt.EQ.'SG')THEN
              Len1=Len1-MOD(Len1,24)
-             CALL SetSiGex(Len1, alloyfraction) ! Len1: init Slab height. 
+             CALL SetSiGex(Len1) ! Len1: init Slab height. 
           ELSE IF(InitSt.EQ.'A')THEN
              CALL SetAFBSymZimb1(Len1)
           ELSE IF(InitSt.EQ.'I')THEN
@@ -575,7 +575,7 @@ C                   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
              CALL SetCAD()
           ELSE IF(InitSt.EQ.'LA')THEN
              tmax=0
-             CALL SetT(b)  ! do this first to allocate T, which will be used in Get_Prob_Ini in SetCAD
+             CALL SetT()  ! do this first to allocate T, which will be used in Get_Prob_Ini in SetCAD
              IF(Homogeneous.EQ.'D')THEN ! initiate stacking fault
               ! Len1 : surface height
               ! Len2,3,4 : coordinates of SF vertex
@@ -584,9 +584,9 @@ C                   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
               SiteC(2)=Len3
               SiteC(3)=Len4
               write(*,*)'Len1,SiteC,Len5',Len1,SiteC,Len5
-              CALL SetSiGeSF(Len1,SiteC,Len5,a,alloyfraction)
+              CALL SetSiGeSF(Len1,SiteC,Len5)
              ELSE
-              CALL SetCAD(a, alloyfraction)
+              CALL SetCAD()
              END IF
              write(*,*)'Max temperature is: ', tmax, 'K'
           ELSE
@@ -615,7 +615,7 @@ C                   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         ELSE
 
-          CALL SetT(b)  ! Update T from server
+          CALL SetT()  ! Update T from server
           ! maybe it would be safer to reinitialize b=0 here
         END IF
         ! ------------------------------------------END INPUT (only for LAcounter=0)
