@@ -403,7 +403,7 @@ def analyze_growth_rate(rundirname, bin_size=5.0,surface_roughness=20.0, method=
             if figname is not None:
                 #rundir = os.getcwd() +'/'+rundirname+'/'
                 #plt.savefig('fig-{}-surface_height-growth_rate-time.png'.format(rundirname[:5]))
-                plt.savefig('{}.png'.format(figname))
+                plt.savefig('{}'.format(figname))
             else:
                 plt.show()
             plt.close()
@@ -574,7 +574,7 @@ def analyze_coverage(rundirname, plotting=True, figname=None, Nexclude=2, minfra
             if figname is not None:
                 #rundir = os.getcwd() +'/'+rundirname+'/'
                 #plt.savefig('fig-{}-surface_height-growth_rate-time.png'.format(rundirname[:5]))
-                plt.savefig('{}.png'.format(figname))
+                plt.savefig('{}'.format(figname))
             else:
                 plt.show()
 
