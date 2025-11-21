@@ -60,8 +60,6 @@ Istituto per la Microelettronica e Microsistemi, Consiglio Nazionale delle Ricer
 
 - G. Fisicaro, C. Bongiorno, I. Deretzis, F. Giannazzo, F. La Via, F. Roccaforte, M. Zielinski, M. Zimbone, A. La Magna, "Genesis and Evolution of Extended Defects: The Role of Evolving Interface Instabilities in Cubic SiC", Applied Physics Reviews vol. 7, no. 2, p. 021402, Apr. 2020, DOI: https://doi.org/10.1063/1.5132300
 
-- https://hq.imm.cnr.it/content/super-lattice-kinetic-monte-carlo-method-simulate-cvd-epitaxy-si-based-materials
-
 - G. Calogero, D. Raciti, P. Acosta-Alba, F. Cristiano, I. Deretzis, G. Fisicaro, K. Huet, S. Kerdilès, A. Sciuto and A. La Magna, "Multiscale modeling of ultrafast melting phenomena", npj Computational Materials 8, 36 (2022), doi: https://doi.org/10.1038/s41524-022-00720-y
 
 - G. Calogero, I. Deretzis, G. Fisicaro, M. Kollmuß, F. La Via, S.F. Lombardo, M. Sch\"oler, P. Wellmann, A. La Magna, "Multiscale simulations for defect-controlled processing of group IV materials", Crystals 12 (12), 1701 (2022) DOI: https://doi.org/10.3390/cryst12121701 
