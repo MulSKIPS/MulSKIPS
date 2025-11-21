@@ -47,12 +47,18 @@ The easiest way to get started is to follow the tutorials [here](https://mulskip
 Please find documentation [here](https://mulskips.readthedocs.io/en/latest/index.html).
 
 ## Developers ##
-- Gaetano Calogero
-- Antonino La Magna
-- Giuseppe Fisicaro
-- Ioannis Deretzis
+Main developers:
+- Gaetano Calogero (CNR-IMM)
+- Antonino La Magna (CNR-IMM)
+- Giuseppe Fisicaro (CNR-IMM)
 
-Istituto per la Microelettronica e Microsistemi, Consiglio Nazionale delle Ricerche, Catania, Italy.
+Contributors:
+- Damiano Ricciarelli (CNR-IMM)
+- Ioannis Deretzis (CNR-IMM)
+- Domenica Raciti
+- Remi Helleboid
+
+CNR-IMM: Istituto per la Microelettronica e Microsistemi, Consiglio Nazionale delle Ricerche, Catania, Italy.
 
 ## Publications citing ```MulSKIPS``` ##
 
